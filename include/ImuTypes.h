@@ -91,6 +91,7 @@ public:
 //IMU calibration (Tbc, Tcb, noise)
 class Calib
 {
+    // ？
     friend class boost::serialization::access;
     template<class Archive>
     void serialize(Archive & ar, const unsigned int version)
@@ -119,8 +120,10 @@ public:
 
 public:
     // Sophus/Eigen implementation
+    // Tcb: Transformation from camera to IMU
     Sophus::SE3<float> mTcb;
     Sophus::SE3<float> mTbc;
+    // IMU intrinsic parameters: noise and 随机游走
     Eigen::DiagonalMatrix<float,6> Cov, CovWalk;
     bool mbIsSet;
 };
@@ -208,12 +211,16 @@ public:
     }
 
 public:
+    // the time between the first and last measurement in one preintegration
     float dT;
+    // 协方差矩阵
     Eigen::Matrix<float,15,15> C;
+    // 信息矩阵
     Eigen::Matrix<float,15,15> Info;
     Eigen::DiagonalMatrix<float,6> Nga, NgaWalk;
 
     // Values for the original bias (when integration was computed)
+    // bias before the update
     Bias b;
     Eigen::Matrix3f dR;
     Eigen::Vector3f dV, dP;
