@@ -1379,7 +1379,17 @@ void Tracking::PrintTimeStats()
         return mCurrentFrame.GetPose();
     }
 
-
+    /**
+ * @brief 输入左目RGB或RGBA图像，输出世界坐标系到该帧相机坐标系的变换矩阵
+ *
+ * @param im 图像
+ * @param timestamp 时间戳
+ * @param filename 文件名字，貌似调试用的
+ *
+ * Step 1 ：将彩色图像转为灰度图像
+ * Step 2 ：构造Frame
+ * Step 3 ：跟踪
+ */
     Sophus::SE3f Tracking::GrabImageMonocular(const cv::Mat &im, const double &timestamp, string filename) {
         mImGray = im;
         if (mImGray.channels() == 3) {
@@ -1432,8 +1442,13 @@ void Tracking::PrintTimeStats()
         mlQueueImuData.push_back(imuMeasurement);
     }
 
+    /**
+ * @brief 预积分，对于一个帧有两种预积分，一种是相对于上一帧，一种是相对于上一个关键帧
+ */
     void Tracking::PreintegrateIMU() {
 
+        // Step 1.拿到两两帧之间待处理的预积分数据，组成一个集合
+        // 上一帧不存在,说明两帧之间没有imu数据，不进行预积分
         if (!mCurrentFrame.mpPrevFrame) {
             Verbose::PrintMess("non prev frame ", Verbose::VERBOSITY_NORMAL);
             mCurrentFrame.setIntegrated();
@@ -1497,7 +1512,7 @@ void Tracking::PrintTimeStats()
                 acc = (mvImuFromLastFrame[i].a + mvImuFromLastFrame[i + 1].a) * 0.5f;
                 angVel = (mvImuFromLastFrame[i].w + mvImuFromLastFrame[i + 1].w) * 0.5f;
                 tstep = mvImuFromLastFrame[i + 1].t - mvImuFromLastFrame[i].t;
-            } else if ((i > 0) && (i == (n - 1))) {
+            } else if ((i > 0) && (i == (n - 1))) { // last imu measurement
                 float tab = mvImuFromLastFrame[i + 1].t - mvImuFromLastFrame[i].t;
                 float tend = mvImuFromLastFrame[i + 1].t - mCurrentFrame.mTimeStamp;
                 acc = (mvImuFromLastFrame[i].a + mvImuFromLastFrame[i + 1].a -
@@ -1584,7 +1599,14 @@ void Tracking::PrintTimeStats()
         // TODO To implement...
     }
 
-
+/**
+ * @brief 跟踪过程，包括恒速模型跟踪、参考关键帧跟踪、局部地图跟踪
+ * track包含两部分：估计运动、跟踪局部地图
+ *
+ * Step 1：初始化
+ * Step 2：跟踪
+ * Step 3：记录位姿信息，用于轨迹复现
+ */
     void Tracking::Track() {
 
         if (bStepByStep) {
@@ -1605,6 +1627,7 @@ void Tracking::PrintTimeStats()
             cout << "ERROR: There is not an active map in the atlas" << endl;
         }
 
+        // 处理时间戳异常的情况
         if (mState != NO_IMAGES_YET) {
             if (mLastFrame.mTimeStamp > mCurrentFrame.mTimeStamp) {
                 cerr << "ERROR: Frame with a timestamp older than previous frame detected!" << endl;
@@ -1645,6 +1668,7 @@ void Tracking::PrintTimeStats()
 
         mLastProcessedState = mState;
 
+        // IMU模式且没有创建地图的情况下对IMU数据进行预积分
         if ((mSensor == System::IMU_MONOCULAR || mSensor == System::IMU_STEREO || mSensor == System::IMU_RGBD) &&
             !mbCreatedMap) {
 #ifdef REGISTER_TIMES
