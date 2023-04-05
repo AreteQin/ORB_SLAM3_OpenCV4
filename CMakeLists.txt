@@ -142,6 +142,8 @@ target_link_libraries(${PROJECT_NAME}
 
 # If RealSense SDK is found the library is added and its examples compiled
 if (realsense2_FOUND)
+    # print realsense directory
+    message(STATUS "RealSense SDK found in: ${realsense_INCLUDE_DIR} and ${realsense2_LIBRARY}")
     include_directories(${PROJECT_NAME}
             ${realsense_INCLUDE_DIR}
             )
