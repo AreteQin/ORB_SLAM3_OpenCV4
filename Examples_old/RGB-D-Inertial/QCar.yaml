@@ -6,11 +6,10 @@
 Camera.type: "PinHole"
 
 # Right Camera calibration and distortion parameters (OpenCV)
-Camera.fx: 617.201
-Camera.fy: 617.362
-Camera.cx: 324.637
-Camera.cy: 242.462
-
+Camera.fx: 607.592
+Camera.fy: 608.191
+Camera.cx: 322.553
+Camera.cy: 242.127
 
 # distortion parameters
 Camera.k1: 0.0
@@ -45,20 +44,20 @@ Tbc: !!opencv-matrix
    rows: 4
    cols: 4
    dt: f
-   data: [1,0,0,-0.005,
-         0,1,0,-0.005,
-         0,0,1,0.0117,
+   data: [-0.01730286,-0.01499097,0.99973791,-0.05021002,
+          -0.99985029,0.00022947,-0.01730136,0.01713152,
+          0.00002995,-0.9998876,-0.01499269,0.07416803,
          0.0, 0.0, 0.0, 1.0]
 
 # Do not insert KFs when recently lost
 InsertKFsWhenLost: 0
 
 # IMU noise (Use those from VINS-mono)
-IMU.NoiseGyro: 1e-3 # 2.44e-4 #1e-3 # rad/s^0.5
-IMU.NoiseAcc: 1e-2 # 1.47e-3 #1e-2 # m/s^1.5
-IMU.GyroWalk: 1e-6 # rad/s^1.5
-IMU.AccWalk: 1e-4 # m/s^2.5
-IMU.Frequency: 200
+IMU.NoiseGyro: 0.0009221746796214183 # 2.44e-4 #1e-3 # rad/s^0.5
+IMU.NoiseAcc: 0.0009221746732053619 # 1.47e-3 #1e-2 # m/s^1.5
+IMU.GyroWalk: 4.3891738326059456e-06 # rad/s^1.5
+IMU.AccWalk: 4.389173826627885e-06 # m/s^2.5
+IMU.Frequency: 2500
 
 #--------------------------------------------------------------------------------------------
 # ORB Parameters
