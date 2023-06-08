@@ -299,6 +299,7 @@ bool VertexPose::read(std::istream& is)
         }
     }
 
+    // stereo baseline
     double bf;
     is >> bf;
     _estimate.SetParam(Rcw,tcw,Rbc,tbc,bf);

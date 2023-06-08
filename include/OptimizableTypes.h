@@ -26,7 +26,7 @@
 #include <Eigen/Geometry>
 #include <include/CameraModels/GeometricCamera.h>
 
-
+// 仅优化位姿的边
 namespace ORB_SLAM3 {
 class  EdgeSE3ProjectXYZOnlyPose: public  g2o::BaseUnaryEdge<2, Eigen::Vector2d, g2o::VertexSE3Expmap>{
 public:
@@ -56,6 +56,7 @@ public:
     GeometricCamera* pCamera;
 };
 
+// 仅优化位姿的边（右目）
 class  EdgeSE3ProjectXYZOnlyPoseToBody: public  g2o::BaseUnaryEdge<2, Eigen::Vector2d, g2o::VertexSE3Expmap>{
 public:
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW
@@ -155,6 +156,7 @@ public:
         _estimate = g2o::Sim3();
     }
 
+    // update estimation: left multiplication on sim3
     virtual void oplusImpl(const double* update_)
     {
         Eigen::Map<g2o::Vector7d> update(const_cast<double*>(update_));

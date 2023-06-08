@@ -339,6 +339,7 @@ public:
     }
 };
 
+// 误差为2维， 类型为Eigen::Vector2d， 节点1类型为g2o::VertexSBAPointXYZ，节点二类型为VertexPose
 class EdgeMono : public g2o::BaseBinaryEdge<2,Eigen::Vector2d,g2o::VertexSBAPointXYZ,VertexPose>
 {
 public:
@@ -492,6 +493,7 @@ public:
     const int cam_idx;
 };
 
+// 惯性边
 class EdgeInertial : public g2o::BaseMultiEdge<9,Vector9d>
 {
 public:
