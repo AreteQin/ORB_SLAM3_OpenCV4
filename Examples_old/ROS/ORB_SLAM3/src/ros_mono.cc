@@ -59,7 +59,7 @@ int main(int argc, char **argv)
     ImageGrabber igb(&SLAM);
 
     ros::NodeHandle nodeHandler;
-    ros::Subscriber sub = nodeHandler.subscribe("/camera/color/image_raw", 1, &ImageGrabber::GrabImage,&igb);
+    ros::Subscriber sub = nodeHandler.subscribe("/dji_osdk_ros/fpv_camera_images", 1, &ImageGrabber::GrabImage,&igb);
 
     ros::spin();
 

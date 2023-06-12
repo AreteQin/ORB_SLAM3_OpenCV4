@@ -14,7 +14,8 @@ Camera.cy: 478.48434775792
 # distortion parameters
 Camera.k1: -0.11950570872907
 Camera.k2: -0.0111663839605156
-Camera.p1: 0.00861364285129652
+#Camera.p1: 0.00861364285129652
+Camera.p1: 0.0
 Camera.p2: 0.0
 
 # Camera resolution
@@ -34,19 +35,19 @@ Camera.imageScale: 0.5 # 0.5 #0.7071 # 1/sqrt(2)
 ThDepth: 40.0
 
 # stereo baseline times fx
-Camera.bf: 46.01
+#Camera.bf: 46.01
 
 # Deptmap values factor
 DepthMapFactor: 1000.0
 
-# Transformation from left camera to body-frame (imu)
+# Transformation from body-frame (imu) to left camera
 Tbc: !!opencv-matrix
    rows: 4
    cols: 4
    dt: f
-   data: [0.09647918, -0.04363951, 0.99437788, -0.1975922,
-     -0.37481299, 0.92390456, 0.07691281, -0.0457492,
-     -0.92206669, -0.38012623, 0.0727809, -0.02079967,
+   data: [0.09647918, -0.04363951,  0.99437788, -0.1975922,
+          -0.37481299,  0.92390456,  0.07691281, -0.04574921,
+          -0.92206669, -0.38012623,  0.0727809,  -0.02079967,
          0.0, 0.0, 0.0, 1.0]
 
 # Do not insert KFs when recently lost

@@ -39,7 +39,7 @@ Camera.bf: 46.01
 # Deptmap values factor
 DepthMapFactor: 1000.0
 
-# Transformation from left camera to body-frame (imu)
+# Transformation from body-frame (imu) left camera
 Tbc: !!opencv-matrix
    rows: 4
    cols: 4
