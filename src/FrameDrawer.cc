@@ -181,7 +181,8 @@ cv::Mat FrameDrawer::DrawFrame(float imageScale)
                 // This is a match to a MapPoint in the map
                 if(vbMap[i])
                 {
-                    cv::rectangle(im,pt1,pt2,standardColor);
+                    cv::Scalar color_red(0, 0, 255);
+                    cv::rectangle(im,pt1,pt2,color_red);
                     cv::circle(im,point,2,standardColor,-1);
                     mnTracked++;
                 }

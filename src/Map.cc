@@ -81,6 +81,15 @@ void Map::AddMapPoint(MapPoint *pMP)
 {
     unique_lock<mutex> lock(mMutexMap);
     mspMapPoints.insert(pMP);
+    // print map point coordinates
+    std::cout<<"Map point coordinates:"<<std::endl;
+    std::cout<<pMP->GetWorldPos()<<std::endl;
+    // print camera pose
+    std::cout<<"Camera coordinates:"<<std::endl;
+    std::cout<<pMP->GetReferenceKeyFrame()->GetPoseInverse().translation()<<std::endl;
+    // print distance between point and camera
+    std::cout<<"Distance:"<<std::endl;
+    std::cout<<pMP->GetReferenceKeyFrame()->GetPoseInverse().translation().norm()<<std::endl;
 }
 
 void Map::SetImuInitialized()
