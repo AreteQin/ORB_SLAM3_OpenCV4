@@ -181,8 +181,12 @@ cv::Mat FrameDrawer::DrawFrame(float imageScale)
                 // This is a match to a MapPoint in the map
                 if(vbMap[i])
                 {
+                    // change map point box color in tracking preview window
                     cv::Scalar color_red(0, 0, 255);
-                    cv::rectangle(im,pt1,pt2,color_red);
+                    // if it is a fire spot, use red box to highlight it
+                    if (vpMatchedMPs[i]->point_type== 1)
+                        cv::rectangle(im,pt1,pt2,standardColor);
+//                    cv::rectangle(im,pt1,pt2,standardColor);
                     cv::circle(im,point,2,standardColor,-1);
                     mnTracked++;
                 }

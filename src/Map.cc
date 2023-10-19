@@ -20,6 +20,7 @@
 #include "Map.h"
 
 #include<mutex>
+#include <glog/logging.h>
 
 namespace ORB_SLAM3
 {
@@ -61,7 +62,7 @@ void Map::AddKeyFrame(KeyFrame *pKF)
 {
     unique_lock<mutex> lock(mMutexMap);
     if(mspKeyFrames.empty()){
-        cout << "First KF:" << pKF->mnId << "; Map init KF:" << mnInitKFid << endl;
+        LOG(INFO) << "First KF:" << pKF->mnId << "; Map init KF:" << mnInitKFid << endl;
         mnInitKFid = pKF->mnId;
         mpKFinitial = pKF;
         mpKFlowerID = pKF;
@@ -81,15 +82,19 @@ void Map::AddMapPoint(MapPoint *pMP)
 {
     unique_lock<mutex> lock(mMutexMap);
     mspMapPoints.insert(pMP);
-    // print map point coordinates
-    std::cout<<"Map point coordinates:"<<std::endl;
-    std::cout<<pMP->GetWorldPos()<<std::endl;
-    // print camera pose
-    std::cout<<"Camera coordinates:"<<std::endl;
-    std::cout<<pMP->GetReferenceKeyFrame()->GetPoseInverse().translation()<<std::endl;
-    // print distance between point and camera
-    std::cout<<"Distance:"<<std::endl;
-    std::cout<<pMP->GetReferenceKeyFrame()->GetPoseInverse().translation().norm()<<std::endl;
+    // if it is a fire spot, print info
+    if(pMP->point_type==1)
+    {
+        // print map point coordinates
+        LOG(INFO)<<"Map point coordinates:"<<std::endl;
+        LOG(INFO)<<pMP->GetWorldPos()<<std::endl;
+        // print camera pose
+        LOG(INFO)<<"Camera coordinates:"<<std::endl;
+        LOG(INFO)<<pMP->GetReferenceKeyFrame()->GetPoseInverse().translation()<<std::endl;
+        // print distance between point and camera
+        LOG(INFO)<<"Distance:"<<std::endl;
+        LOG(INFO)<<pMP->GetReferenceKeyFrame()->GetPoseInverse().translation().norm()<<std::endl;
+    }
 }
 
 void Map::SetImuInitialized()

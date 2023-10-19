@@ -44,6 +44,8 @@ endif ()
 
 LIST(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake_modules)
 
+find_package(Glog REQUIRED)
+
 find_package(OpenCV)
 if (NOT OpenCV_FOUND)
     message(FATAL_ERROR "OpenCV not found.")
@@ -131,6 +133,7 @@ add_library(${PROJECT_NAME} SHARED
 add_subdirectory(Thirdparty/g2o)
 
 target_link_libraries(${PROJECT_NAME}
+        ${GLOG_LIBRARIES}
         ${OpenCV_LIBS}
         ${EIGEN3_LIBS}
         ${Pangolin_LIBRARIES}
@@ -138,7 +141,7 @@ target_link_libraries(${PROJECT_NAME}
         ${PROJECT_SOURCE_DIR}/Thirdparty/g2o/lib/libg2o.so
         -lboost_serialization
         -lcrypto
-        )
+)
 
 # If RealSense SDK is found the library is added and its examples compiled
 if (realsense2_FOUND)
@@ -148,10 +151,10 @@ if (realsense2_FOUND)
     message("RealSense SDK library found in: ${realsense2_DIR}")
     include_directories(${PROJECT_NAME}
             ${realsense2_INCLUDE_DIR}
-            )
+    )
     target_link_libraries(${PROJECT_NAME}
             ${realsense2_LIBRARY}
-            )
+    )
 endif ()
 
 

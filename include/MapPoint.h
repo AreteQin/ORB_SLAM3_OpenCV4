@@ -105,6 +105,10 @@ class MapPoint
 
 public:
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+
+    // for fire bounding box
+    int point_type = 0; // 0: normal, 1: fire, 2: smoke
+
     MapPoint();
 
     MapPoint(const Eigen::Vector3f &Pos, KeyFrame* pRefKF, Map* pMap);

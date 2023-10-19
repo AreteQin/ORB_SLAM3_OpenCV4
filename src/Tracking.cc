@@ -33,6 +33,7 @@
 
 #include <mutex>
 #include <chrono>
+#include <glog/logging.h>
 
 
 using namespace std;
@@ -1390,7 +1391,8 @@ void Tracking::PrintTimeStats()
  * Step 2 ：构造Frame
  * Step 3 ：跟踪
  */
-    Sophus::SE3f Tracking::GrabImageMonocular(const cv::Mat &im, const double &timestamp, string filename) {
+    Sophus::SE3f Tracking::GrabImageMonocular(const cv::Mat &im, const double &timestamp,
+                                              string filename, vector<cv::Rect> fire_spots) {
         mImGray = im;
         if (mImGray.channels() == 3) {
             if (mbRGB)
@@ -1405,19 +1407,25 @@ void Tracking::PrintTimeStats()
         }
 
         if (mSensor == System::MONOCULAR) {
-            if (mState == NOT_INITIALIZED || mState == NO_IMAGES_YET || (lastID - initID) < mMaxFrames)
+            if (mState == NOT_INITIALIZED || mState == NO_IMAGES_YET || (lastID - initID) < mMaxFrames) {
                 mCurrentFrame = Frame(mImGray, timestamp, mpIniORBextractor, mpORBVocabulary, mpCamera, mDistCoef, mbf,
-                                      mThDepth);
-            else
+                                      mThDepth, fire_spots);
+//                LOG(INFO) << "frame created";
+            } else {
                 mCurrentFrame = Frame(mImGray, timestamp, mpORBextractorLeft, mpORBVocabulary, mpCamera, mDistCoef, mbf,
-                                      mThDepth);
+                                      mThDepth, fire_spots);
+                LOG(INFO) << "frame created";
+            }
         } else if (mSensor == System::IMU_MONOCULAR) {
             if (mState == NOT_INITIALIZED || mState == NO_IMAGES_YET) {
                 mCurrentFrame = Frame(mImGray, timestamp, mpIniORBextractor, mpORBVocabulary, mpCamera, mDistCoef, mbf,
-                                      mThDepth, &mLastFrame, *mpImuCalib);
-            } else
+                                      mThDepth, fire_spots, &mLastFrame, *mpImuCalib);
+                LOG(INFO) << "frame created";
+            } else {
                 mCurrentFrame = Frame(mImGray, timestamp, mpORBextractorLeft, mpORBVocabulary, mpCamera, mDistCoef, mbf,
-                                      mThDepth, &mLastFrame, *mpImuCalib);
+                                      mThDepth, fire_spots, &mLastFrame, *mpImuCalib);
+                LOG(INFO) << "frame created";
+            }
         }
 
         if (mState == NO_IMAGES_YET)
@@ -2294,9 +2302,10 @@ void Tracking::PrintTimeStats()
         sMPs = pKFini->GetMapPoints();
 
         // Bundle Adjustment
-        Verbose::PrintMess("New Map created with " + to_string(mpAtlas->MapPointsInMap()) + " points",
-                           Verbose::VERBOSITY_QUIET);
+        LOG(INFO) << "New Map created with " << to_string(mpAtlas->MapPointsInMap()) << " points";
         Optimizer::GlobalBundleAdjustemnt(mpAtlas->GetCurrentMap(), 20);
+
+        LOG(INFO) << "GlobalBundleAdjustemnt";
 
         float medianDepth = pKFini->ComputeSceneMedianDepth(2);
         float invMedianDepth;
@@ -2441,7 +2450,7 @@ void Tracking::PrintTimeStats()
         int nmatches = matcher.SearchByBoW(mpReferenceKF, mCurrentFrame, vpMapPointMatches);
 
         if (nmatches < 15) {
-            cout << "TRACK_REF_KF: Less than 15 matches!!\n";
+            LOG(INFO) << "TRACK_REF_KF: Less than 15 matches!!\n";
             return false;
         }
 
