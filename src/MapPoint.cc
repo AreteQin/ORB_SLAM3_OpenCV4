@@ -53,7 +53,7 @@ namespace ORB_SLAM3 {
         for (auto &box: pRefKF->mFireSpots) {
 //            LOG(INFO)<< "box: " << box.x << " " << box.y << " " << box.width << " " << box.height;
 //            LOG(INFO)<< "uv: " << uv.x << " " << uv.y;
-            if (uv.x >= box.x && uv.x <= (box.x + box.width) && uv.y >= box.y && uv.y <= (box.y + box.height)) {
+            if (box.contains(uv)) { //uv.x >= box.x && uv.x <= (box.x + box.width) && uv.y >= box.y && uv.y <= (box.y + box.height)
 //                unique_lock<mutex> lock(mpMap->mMutexPointCreation);
 //                unique_lock<mutex> lock1(mGlobalMutex);
                 unique_lock<mutex> lock2(mMutexType);
