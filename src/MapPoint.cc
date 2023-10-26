@@ -22,6 +22,7 @@
 #include<mutex>
 
 #include <glog/logging.h>
+#include <glog/logging.h>
 
 namespace ORB_SLAM3 {
 
@@ -43,8 +44,24 @@ namespace ORB_SLAM3 {
             mpReplaced(static_cast<MapPoint *>(NULL)), mfMinDistance(0), mfMaxDistance(0), mpMap(pMap),
             mnOriginMapId(pMap->GetId()) {
         SetWorldPos(Pos);
-
         mNormalVector.setZero();
+
+        // determine if it is a fire spot or not
+        // get the pixel coordinate of the keypoint in the frame image
+        cv::Point2f uv = pRefKF->mvKeysUn[pRefKF->mvKeysUn.size() - 1].pt;
+        // whether the keypoint in frame image is within the fire spot bounding box
+        for (auto &box: pRefKF->mFireSpots) {
+//            LOG(INFO)<< "box: " << box.x << " " << box.y << " " << box.width << " " << box.height;
+//            LOG(INFO)<< "uv: " << uv.x << " " << uv.y;
+            if (uv.x >= box.x && uv.x <= (box.x + box.width) && uv.y >= box.y && uv.y <= (box.y + box.height)) {
+//                unique_lock<mutex> lock(mpMap->mMutexPointCreation);
+//                unique_lock<mutex> lock1(mGlobalMutex);
+                unique_lock<mutex> lock2(mMutexType);
+//                unique_lock<mutex> lock3(mMutexPos);
+                point_type = 1;
+                break;
+            }
+        }
 
         mbTrackInViewR = false;
         mbTrackInView = false;
@@ -80,18 +97,6 @@ namespace ORB_SLAM3 {
             mnFound(1), mbBad(false), mpReplaced(NULL), mpMap(pMap), mnOriginMapId(pMap->GetId()) {
         SetWorldPos(Pos);
 
-        // determine if it is a fire spot or not
-        // get the pixel coordinate of the keypoint in the frame image
-        cv::Point2f uv = pFrame->mvKeysUn[idxF].pt;
-        // weather the keypoint in frame image is within the fire spot bounding box
-        LOG(INFO) << "fire spots size: " << pFrame->mFireSpots.size();
-        for (auto &box: pFrame->mFireSpots) {
-            if (uv.x >= box.x && uv.x <= box.x + box.width && uv.y >= box.y && uv.y <= box.y + box.height) {
-                point_type = 1;
-                break;
-            }
-        }
-
         Eigen::Vector3f Ow;
         if (pFrame->Nleft == -1 || idxF < pFrame->Nleft) {
             Ow = pFrame->GetCameraCenter();
@@ -121,6 +126,17 @@ namespace ORB_SLAM3 {
         // MapPoints can be created from Tracking and Local Mapping. This mutex avoid conflicts with id.
         unique_lock<mutex> lock(mpMap->mMutexPointCreation);
         mnId = nNextId++;
+    }
+
+    // Check point type
+    unsigned int MapPoint::CheckPointType() {
+//        unique_lock<mutex> lock(mpMap->mMutexPointCreation);
+//        unique_lock<mutex> lock1(mGlobalMutex);
+        unique_lock<mutex> lock2(mMutexType);
+//        LOG(INFO) << "point type: " << point_type;
+//        unique_lock<mutex> lock3(mMutexPos);
+//        unique_lock<mutex> lock4(mpMap->mMutexMapUpdate);
+        return point_type;
     }
 
     void MapPoint::SetWorldPos(const Eigen::Vector3f &Pos) {

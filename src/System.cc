@@ -32,6 +32,7 @@
 #include <boost/archive/binary_oarchive.hpp>
 #include <boost/archive/xml_iarchive.hpp>
 #include <boost/archive/xml_oarchive.hpp>
+#include <glog/logging.h>
 
 namespace ORB_SLAM3 {
 
@@ -469,6 +470,8 @@ namespace ORB_SLAM3 {
                 resized_fire_spot.height = fire_spots[i].height * settings_->newImSize().height / im.rows;
                 resized_fire_spots.push_back(resized_fire_spot);
             }
+        }else{
+            resized_fire_spots = fire_spots;
         }
 
         // Check mode change

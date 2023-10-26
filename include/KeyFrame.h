@@ -197,6 +197,9 @@ public:
     KeyFrame();
     KeyFrame(Frame &F, Map* pMap, KeyFrameDatabase* pKFDB);
 
+    // Fire Spots
+    vector<cv::Rect> mFireSpots;
+
     // Pose functions
     void SetPose(const Sophus::SE3f &Tcw);
     void SetVelocity(const Eigen::Vector3f &Vw_);

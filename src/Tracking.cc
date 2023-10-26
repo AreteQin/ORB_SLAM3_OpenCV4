@@ -1410,21 +1410,19 @@ void Tracking::PrintTimeStats()
             if (mState == NOT_INITIALIZED || mState == NO_IMAGES_YET || (lastID - initID) < mMaxFrames) {
                 mCurrentFrame = Frame(mImGray, timestamp, mpIniORBextractor, mpORBVocabulary, mpCamera, mDistCoef, mbf,
                                       mThDepth, fire_spots);
-//                LOG(INFO) << "frame created";
+//                LOG(INFO) << "frame created in mono initialization";
             } else {
                 mCurrentFrame = Frame(mImGray, timestamp, mpORBextractorLeft, mpORBVocabulary, mpCamera, mDistCoef, mbf,
                                       mThDepth, fire_spots);
-                LOG(INFO) << "frame created";
+//                LOG(INFO) << "frame created 2 mono";
             }
         } else if (mSensor == System::IMU_MONOCULAR) {
             if (mState == NOT_INITIALIZED || mState == NO_IMAGES_YET) {
                 mCurrentFrame = Frame(mImGray, timestamp, mpIniORBextractor, mpORBVocabulary, mpCamera, mDistCoef, mbf,
                                       mThDepth, fire_spots, &mLastFrame, *mpImuCalib);
-                LOG(INFO) << "frame created";
             } else {
                 mCurrentFrame = Frame(mImGray, timestamp, mpORBextractorLeft, mpORBVocabulary, mpCamera, mDistCoef, mbf,
                                       mThDepth, fire_spots, &mLastFrame, *mpImuCalib);
-                LOG(INFO) << "frame created";
             }
         }
 

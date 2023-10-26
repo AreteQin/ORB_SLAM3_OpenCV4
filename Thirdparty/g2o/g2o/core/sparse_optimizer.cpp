@@ -353,7 +353,6 @@ namespace g2o {
                  << endl;
             return -1;
         }
-        std::cout << "1" << std::endl;
         int cjIterations = 0;
         double cumTime = 0;
         bool ok = true;
@@ -363,18 +362,15 @@ namespace g2o {
             cerr << __PRETTY_FUNCTION__ << " Error while initializing" << endl;
             return -1;
         }
-        std::cout<< "2" << std::endl;
 
         _batchStatistics.clear();
         if (_computeBatchStatistics)
             _batchStatistics.resize(iterations);
 
         OptimizationAlgorithm::SolverResult result = OptimizationAlgorithm::OK;
-        std::cout<< "3" << std::endl;
 
         for (int i = 0; i < iterations && !terminate() && ok; i++) {
             preIteration(i);
-            std::cout<< "for " << i << std::endl;
 
             if (_computeBatchStatistics) {
                 G2OBatchStatistics &cstat = _batchStatistics[i];
@@ -383,11 +379,9 @@ namespace g2o {
                 cstat.numEdges = _activeEdges.size();
                 cstat.numVertices = _activeVertices.size();
             }
-            std::cout<< "4" << std::endl;
             double ts = get_monotonic_time();
             result = _algorithm->solve(i, online);
             ok = (result == OptimizationAlgorithm::OK);
-            std::cout<< "5" << std::endl;
             bool errorComputed = false;
             if (_computeBatchStatistics) {
                 computeActiveErrors();
@@ -410,15 +404,11 @@ namespace g2o {
                 cerr << endl;
             }
             ++cjIterations;
-            std::cout<< "6" << std::endl;
             postIteration(i);
         }
-        std::cout<< "7" << std::endl;
         if (result == OptimizationAlgorithm::Fail) {
-            std::cout<< "7.5" << std::endl;
             return 0;
         }
-        std::cout<< "8" << std::endl;
         return cjIterations;
     }
 

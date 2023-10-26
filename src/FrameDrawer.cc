@@ -23,6 +23,7 @@
 #include <opencv2/highgui/highgui.hpp>
 
 #include<mutex>
+#include <glog/logging.h>
 
 namespace ORB_SLAM3
 {
@@ -184,9 +185,10 @@ cv::Mat FrameDrawer::DrawFrame(float imageScale)
                     // change map point box color in tracking preview window
                     cv::Scalar color_red(0, 0, 255);
                     // if it is a fire spot, use red box to highlight it
-                    if (vpMatchedMPs[i]->point_type== 1)
-                        cv::rectangle(im,pt1,pt2,standardColor);
-//                    cv::rectangle(im,pt1,pt2,standardColor);
+//                    LOG(INFO) << "point type: " << vpMatchedMPs[i]->CheckPointType();
+//                    if (vpMatchedMPs[i]->point_type == 1)
+//                        cv::rectangle(im,pt1,pt2,color_red);
+                    cv::rectangle(im,pt1,pt2,standardColor);
                     cv::circle(im,point,2,standardColor,-1);
                     mnTracked++;
                 }
