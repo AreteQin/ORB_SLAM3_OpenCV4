@@ -160,10 +160,10 @@ namespace ORB_SLAM3 {
                         cv::Scalar color_red(0, 0, 255);
                         // if it is a fire spot, use red box to highlight it
                         for (cv::Rect box: currentFrame.mFireSpots) {
-                            if (box.contains(point)) {
-                                cv::rectangle(im, pt1, pt2, color_red);
+//                            if (box.contains(point)) {
+                                cv::rectangle(im, box.br(), box.tl(), color_red, 3, 8, 0);
                                 break;
-                            }
+//                            }
                         }
 //                        cv::rectangle(im, pt1, pt2, standardColor);
 //                    LOG(INFO) << "point type: " << vpLocalMap[i]->CheckPointType();

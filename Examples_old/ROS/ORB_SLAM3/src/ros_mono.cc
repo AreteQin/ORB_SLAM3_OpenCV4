@@ -27,93 +27,39 @@
 
 #include<opencv2/core/core.hpp>
 
-#include "vision_msgs/Detection2DArray.h"
-#include <message_filters/subscriber.h>
-#include <message_filters/time_synchronizer.h>
-
-#include <glog/logging.h>
-
 #include"../../../include/System.h"
-#include <image_transport/image_transport.h>
-#include <image_transport/subscriber_filter.h>
 
 using namespace std;
 
-//class ImageGrabber
-//{
-//public:
-//    ImageGrabber(ORB_SLAM3::System* pSLAM):mpSLAM(pSLAM){}
-//
-//    void GrabImage(const sensor_msgs::ImageConstPtr& msg);
-//
-//    ORB_SLAM3::System* mpSLAM;
-//};
+class ImageGrabber
+{
+public:
+    ImageGrabber(ORB_SLAM3::System* pSLAM):mpSLAM(pSLAM){}
 
+    void GrabImage(const sensor_msgs::ImageConstPtr& msg);
 
-//class ImageGrabber {
-//public:
-//    ImageGrabber(ORB_SLAM3::System *pSLAM) : mpSLAM(pSLAM) {}
-//
-//    void GrabImage(const sensor_msgs::ImageConstPtr &msg, const vision_msgs::Detection2DArrayConstPtr &msg_fire_spot);
-//
-//    ORB_SLAM3::System *mpSLAM;
-//};
+    ORB_SLAM3::System* mpSLAM;
+};
 
-void ImageBoxesCallback(ORB_SLAM3::System *pSLAM, const sensor_msgs::ImageConstPtr &msg,
-                        const vision_msgs::Detection2DArrayConstPtr &msg_fire_spot) {
-    // Copy the ros image message to cv::Mat.
-    cv_bridge::CvImageConstPtr cv_ptr;
-    try {
-        cv_ptr = cv_bridge::toCvShare(msg);
-    }
-    catch (cv_bridge::Exception &e) {
-        ROS_ERROR("cv_bridge exception: %s", e.what());
-        return;
-    }
-
-    // convert dectection2DArray to vector<cv::Rect>
-    vector<cv::Rect> fire_spots;
-//    LOG(INFO) << "fire spots number: " << msg_fire_spot->detections.size();
-    for (auto &box: msg_fire_spot->detections) {
-        fire_spots.emplace_back(box.bbox.center.x - box.bbox.size_x / 2,
-                                box.bbox.center.y - box.bbox.size_y / 2,
-                                box.bbox.size_x, box.bbox.size_y);
-    }
-
-//    pSLAM->TrackMonocular(cv_ptr->image, cv_ptr->header.stamp.toSec());
-    pSLAM->TrackMonocularAndFire(cv_ptr->image, cv_ptr->header.stamp.toSec(), fire_spots);
-}
-
-int main(int argc, char **argv) {
+int main(int argc, char **argv)
+{
     ros::init(argc, argv, "Mono");
     ros::start();
 
-    if (argc != 3) {
+    if(argc != 3)
+    {
         cerr << endl << "Usage: rosrun ORB_SLAM3 Mono path_to_vocabulary path_to_settings" << endl;
         ros::shutdown();
         return 1;
     }
 
     // Create SLAM system. It initializes all system threads and gets ready to process frames.
-    ORB_SLAM3::System SLAM(argv[1], argv[2], ORB_SLAM3::System::MONOCULAR, true);
+    ORB_SLAM3::System SLAM(argv[1],argv[2],ORB_SLAM3::System::MONOCULAR,true);
 
-//    ImageGrabber igb(&SLAM);
+    ImageGrabber igb(&SLAM);
 
     ros::NodeHandle nodeHandler;
-    // message filter for images
-    image_transport::ImageTransport it(nodeHandler);
-    image_transport::SubscriberFilter sub_image(it, "/dji_osdk_ros/main_camera_images", 1);
-    message_filters::Subscriber <vision_msgs::Detection2DArray> sub_fire_spot;
-    sub_fire_spot.subscribe(nodeHandler, "/bounding_boxes/fire_spots", 1);
-
-//    ros::Subscriber sub = nodeHandler.subscribe("/dji_osdk_ros/main_camera_images", 1,
-//                                                &ImageGrabber::GrabImage, &igb);
-//    ros::Subscriber sub = nodeHandler.subscribe("/camera/image_raw", 1, &ImageGrabber::GrabImage,&igb);
-
-    // Sync the subscribed data
-    message_filters::TimeSynchronizer <sensor_msgs::Image, vision_msgs::Detection2DArray>
-            sync(sub_image, sub_fire_spot, 100);
-    sync.registerCallback(boost::bind(&ImageBoxesCallback, &SLAM, _1, _2));
+    ros::Subscriber sub = nodeHandler.subscribe("/dji_osdk_ros/main_wide_RGB", 1, &ImageGrabber::GrabImage,&igb);
 
     ros::spin();
 
@@ -128,19 +74,20 @@ int main(int argc, char **argv) {
     return 0;
 }
 
-//void ImageGrabber::GrabImage(const sensor_msgs::ImageConstPtr& msg)
-//{
-//    // Copy the ros image message to cv::Mat.
-//    cv_bridge::CvImageConstPtr cv_ptr;
-//    try
-//    {
-//        cv_ptr = cv_bridge::toCvShare(msg);
-//    }
-//    catch (cv_bridge::Exception& e)
-//    {
-//        ROS_ERROR("cv_bridge exception: %s", e.what());
-//        return;
-//    }
-//
-//    mpSLAM->TrackMonocular(cv_ptr->image,cv_ptr->header.stamp.toSec());
-//}
+void ImageGrabber::GrabImage(const sensor_msgs::ImageConstPtr& msg)
+{
+    // Copy the ros image message to cv::Mat.
+    cv_bridge::CvImageConstPtr cv_ptr;
+    try
+    {
+        cv_ptr = cv_bridge::toCvShare(msg);
+    }
+    catch (cv_bridge::Exception& e)
+    {
+        ROS_ERROR("cv_bridge exception: %s", e.what());
+        return;
+    }
+
+    mpSLAM->TrackMonocular(cv_ptr->image,cv_ptr->header.stamp.toSec());
+}
+

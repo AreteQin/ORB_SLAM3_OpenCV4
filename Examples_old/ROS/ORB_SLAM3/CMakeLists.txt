@@ -123,3 +123,13 @@ rosbuild_add_executable(Stereo_Inertial
 target_link_libraries(Stereo_Inertial
         ${LIBS}
 )
+
+# Node for fire localization
+rosbuild_add_executable(fire_localization
+        src/ros_fire_localization.cc
+)
+
+target_link_libraries(fire_localization
+        ${LIBS}
+        ${GLOG_LIBRARIES}
+)
