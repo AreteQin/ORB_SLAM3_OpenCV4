@@ -37,7 +37,7 @@ namespace ORB_SLAM3 {
         mpReplaced = static_cast<MapPoint *>(NULL);
     }
 
-    MapPoint::MapPoint(const Eigen::Vector3f &Pos, KeyFrame *pRefKF, Map *pMap) :
+    MapPoint::MapPoint(const cv::KeyPoint uv, const Eigen::Vector3f &Pos, KeyFrame *pRefKF, Map *pMap) :
             mnFirstKFid(pRefKF->mnId), mnFirstFrame(pRefKF->mnFrameId), nObs(0), mnTrackReferenceForFrame(0),
             mnLastFrameSeen(0), mnBALocalForKF(0), mnFuseCandidateForKF(0), mnLoopPointForKF(0), mnCorrectedByKF(0),
             mnCorrectedReference(0), mnBAGlobalForKF(0), mpRefKF(pRefKF), mnVisible(1), mnFound(1), mbBad(false),
@@ -47,16 +47,21 @@ namespace ORB_SLAM3 {
         mNormalVector.setZero();
 
         // determine if it is a fire spot or not
-        // get the pixel coordinate of the keypoint in the frame image
-        cv::Point2f uv = pRefKF->mvKeysUn[pRefKF->mvKeysUn.size() - 1].pt;
         // whether the keypoint in frame image is within the fire spot bounding box
+//        LOG(INFO)<<"uv: "<<uv.pt.x<<" "<<uv.pt.y;
         for (auto &box: pRefKF->mFireSpots) {
 //            LOG(INFO)<< "box: " << box.x << " " << box.y << " " << box.width << " " << box.height;
-//            LOG(INFO)<< "uv: " << uv.x << " " << uv.y;
-            if (box.contains(uv)) { //uv.x >= box.x && uv.x <= (box.x + box.width) && uv.y >= box.y && uv.y <= (box.y + box.height)
+            // divide by mImageScale to get the correct box size
+//            LOG(INFO)<<"mnScaleLevels: "<<(pRefKF->mnFrameId)
+//            box.x = box.x / pRefKF->mnScaleLevels;
+//            box.y = box.y / pRefKF->mnScaleLevels;
+//            box.width = box.width / pRefKF->mnScaleLevels;
+//            box.height = box.height / pRefKF->mnScaleLevels;
+            if (box.contains(
+                    uv.pt)) { //uv.x >= box.x && uv.x <= (box.x + box.width) && uv.y >= box.y && uv.y <= (box.y + box.height)
 //                unique_lock<mutex> lock(mpMap->mMutexPointCreation);
 //                unique_lock<mutex> lock1(mGlobalMutex);
-                unique_lock<mutex> lock2(mMutexType);
+                LOG(INFO) << "fire found!";
 //                unique_lock<mutex> lock3(mMutexPos);
                 point_type = 1;
                 break;
@@ -129,13 +134,7 @@ namespace ORB_SLAM3 {
     }
 
     // Check point type
-    unsigned int MapPoint::CheckPointType() {
-//        unique_lock<mutex> lock(mpMap->mMutexPointCreation);
-//        unique_lock<mutex> lock1(mGlobalMutex);
-        unique_lock<mutex> lock2(mMutexType);
-//        LOG(INFO) << "point type: " << point_type;
-//        unique_lock<mutex> lock3(mMutexPos);
-//        unique_lock<mutex> lock4(mpMap->mMutexMapUpdate);
+    unsigned int MapPoint::CheckPointType() const {
         return point_type;
     }
 

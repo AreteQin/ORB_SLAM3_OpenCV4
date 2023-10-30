@@ -83,14 +83,14 @@ namespace ORB_SLAM3 {
         if (pMP->CheckPointType() == 1) {
 //        if (pMP->point_type == 1) {
             // print map point coordinates
-            LOG(INFO) << "Map point coordinates:" << std::endl;
-            LOG(INFO) << pMP->GetWorldPos() << std::endl;
+            std::cout << "======>Map point coordinates:" << std::endl;
+            std::cout << pMP->GetWorldPos() << std::endl;
             // print camera pose
-            LOG(INFO) << "Camera coordinates:" << std::endl;
-            LOG(INFO) << pMP->GetReferenceKeyFrame()->GetPoseInverse().translation() << std::endl;
+            std::cout << "======>Camera coordinates:" << std::endl;
+            std::cout << pMP->GetReferenceKeyFrame()->GetPoseInverse().translation() << std::endl;
             // print distance between point and camera
-            LOG(INFO) << "Distance:" << std::endl;
-            LOG(INFO) << pMP->GetReferenceKeyFrame()->GetPoseInverse().translation().norm() << std::endl;
+            std::cout << "======>Distance:" << std::endl;
+            std::cout << pMP->GetReferenceKeyFrame()->GetPoseInverse().translation().norm() << std::endl;
         }
     }
 

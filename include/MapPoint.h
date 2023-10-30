@@ -108,7 +108,7 @@ namespace ORB_SLAM3 {
 
         MapPoint();
 
-        MapPoint(const Eigen::Vector3f &Pos, KeyFrame *pRefKF, Map *pMap);
+        MapPoint(const cv::KeyPoint uv, const Eigen::Vector3f &Pos, KeyFrame *pRefKF, Map *pMap);
 
         MapPoint(const double invDepth, cv::Point2f uv_init, KeyFrame *pRefKF, KeyFrame *pHostKF, Map *pMap);
 
@@ -181,7 +181,7 @@ namespace ORB_SLAM3 {
     public:
         // for fire bounding box
         unsigned int point_type = 0; // 0: normal, 1: fire, 2: smoke
-        unsigned int CheckPointType();
+        unsigned int CheckPointType() const;
 
         long unsigned int mnId;
         static long unsigned int nNextId;
@@ -270,7 +270,6 @@ namespace ORB_SLAM3 {
         std::mutex mMutexPos;
         std::mutex mMutexFeatures;
         std::mutex mMutexMap;
-        std::mutex mMutexType;
     };
 
 } //namespace ORB_SLAM
