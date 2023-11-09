@@ -155,6 +155,9 @@ public:
     std::set<long unsigned int> msOptKFs;
     std::set<long unsigned int> msFixedKFs;
 
+    // Fire spots
+    std::vector<Eigen::Vector3f> mvFireSpots;
+
 protected:
 
     long unsigned int mnId;

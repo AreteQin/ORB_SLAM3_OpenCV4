@@ -1530,5 +1530,12 @@ namespace ORB_SLAM3 {
         return checksum;
     }
 
+    Map *System::GetActiveMap() {
+        return mpAtlas->GetCurrentMap();
+    }
+
+    Eigen::Matrix4f System::GetCurrentPose() {
+        return mpTracker->mCurrentFrame.GetPose().matrix();
+    }
 } //namespace ORB_SLAM
 

@@ -186,6 +186,12 @@ public:
 
     float GetImageScale();
 
+    // Get the active map
+    Map* GetActiveMap();
+
+    // Get the current pose
+    Eigen::Matrix4f GetCurrentPose();
+
 #ifdef REGISTER_TIMES
     void InsertRectTime(double& time);
     void InsertResizeTime(double& time);

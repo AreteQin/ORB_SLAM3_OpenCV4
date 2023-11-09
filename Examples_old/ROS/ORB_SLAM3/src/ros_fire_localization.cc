@@ -1,26 +1,26 @@
-#include<iostream>
-#include<algorithm>
-#include<fstream>
-#include<chrono>
-
-#include<ros/ros.h>
+#include <iostream>
+#include <algorithm>
+#include <fstream>
+#include <chrono>
+#include <ros/ros.h>
 #include <cv_bridge/cv_bridge.h>
-
-#include<opencv2/core/core.hpp>
-
+#include <opencv2/core/core.hpp>
 #include "vision_msgs/Detection2DArray.h"
 #include <message_filters/subscriber.h>
 #include <message_filters/time_synchronizer.h>
-
 #include <glog/logging.h>
-
-#include"../../../include/System.h"
 #include <image_transport/image_transport.h>
 #include <image_transport/subscriber_filter.h>
+#include <geometry_msgs/PoseArray.h>
+#include <geometry_msgs/PoseStamped.h>
+
+#include "../../../include/System.h"
+#include "../../../include/Map.h"
+
 
 using namespace std;
 
-void ImageBoxesCallback(ORB_SLAM3::System *pSLAM, const sensor_msgs::ImageConstPtr &msg,
+void ImageBoxesCallback(ORB_SLAM3::System *pSLAM, ros::Publisher *fire_spots_pub, ros::Publisher *camera_pose_pub, const sensor_msgs::ImageConstPtr &msg,
                         const vision_msgs::Detection2DArrayConstPtr &msg_fire_spot) {
     // Copy the ros image message to cv::Mat.
     cv_bridge::CvImageConstPtr cv_ptr;
@@ -41,8 +41,36 @@ void ImageBoxesCallback(ORB_SLAM3::System *pSLAM, const sensor_msgs::ImageConstP
                                 box.bbox.size_x, box.bbox.size_y);
     }
 
-//    pSLAM->TrackMonocular(cv_ptr->image, cv_ptr->header.stamp.toSec());
     pSLAM->TrackMonocularAndFire(cv_ptr->image, cv_ptr->header.stamp.toSec(), fire_spots);
+    ORB_SLAM3::Map* current_map = pSLAM->GetActiveMap();
+
+    // Publish the fire spots
+    geometry_msgs::PoseArray fire_spots_msg;
+    fire_spots_msg.header.stamp = ros::Time::now();
+    fire_spots_msg.header.frame_id = "map";
+    for (Eigen::Vector3f &fire_spot: current_map->mvFireSpots) {
+        geometry_msgs::Pose pose;
+        pose.position.x = fire_spot[0];
+        pose.position.y = fire_spot[1];
+        pose.position.z = fire_spot[2];
+        fire_spots_msg.poses.push_back(pose);
+    }
+    fire_spots_pub->publish(fire_spots_msg);
+
+    // Publish the camera pose
+    geometry_msgs::PoseStamped camera_pose_msg;
+    camera_pose_msg.header.stamp = ros::Time::now();
+    camera_pose_msg.header.frame_id = "map";
+    Eigen::Matrix4f Tcw = pSLAM->GetCurrentPose();
+    camera_pose_msg.pose.position.x = Tcw(0, 3);
+    camera_pose_msg.pose.position.y = Tcw(1, 3);
+    camera_pose_msg.pose.position.z = Tcw(2, 3);
+    Eigen::Quaternionf q(Tcw.block<3, 3>(0, 0));
+    camera_pose_msg.pose.orientation.x = q.x();
+    camera_pose_msg.pose.orientation.y = q.y();
+    camera_pose_msg.pose.orientation.z = q.z();
+    camera_pose_msg.pose.orientation.w = q.w();
+    camera_pose_pub->publish(camera_pose_msg);
 }
 
 int main(int argc, char **argv) {
@@ -58,19 +86,24 @@ int main(int argc, char **argv) {
     // Create SLAM system. It initializes all system threads and gets ready to process frames.
     ORB_SLAM3::System SLAM(argv[1], argv[2], ORB_SLAM3::System::MONOCULAR, true);
 
-//    ImageGrabber igb(&SLAM);
-
     ros::NodeHandle nodeHandler;
+
     // message filter for images
     image_transport::ImageTransport it(nodeHandler);
     image_transport::SubscriberFilter sub_image(it, "/dji_osdk_ros/main_wide_RGB", 1);
     message_filters::Subscriber <vision_msgs::Detection2DArray> sub_fire_spot;
     sub_fire_spot.subscribe(nodeHandler, "/bounding_boxes/fire_spots", 1);
 
+    // Publish fire spots
+    ros::Publisher fire_spots_pub = nodeHandler.advertise<geometry_msgs::PoseArray>("/position/fire_spots", 10);
+
+    // Publish camera pose
+    ros::Publisher camera_pose_pub = nodeHandler.advertise<geometry_msgs::PoseStamped>("/position/camera_pose", 10);
+
     // Sync the subscribed data
     message_filters::TimeSynchronizer <sensor_msgs::Image, vision_msgs::Detection2DArray>
             sync(sub_image, sub_fire_spot, 100);
-    sync.registerCallback(boost::bind(&ImageBoxesCallback, &SLAM, _1, _2));
+    sync.registerCallback(boost::bind(&ImageBoxesCallback, &SLAM, &fire_spots_pub, &camera_pose_pub, _1, _2));
 
     ros::spin();
 

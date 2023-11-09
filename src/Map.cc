@@ -91,6 +91,8 @@ namespace ORB_SLAM3 {
             // print distance between point and camera
             std::cout << "======>Distance:" << std::endl;
             std::cout << pMP->GetReferenceKeyFrame()->GetPoseInverse().translation().norm() << std::endl;
+            // store fire spot coordinates in Map::mvFireSpots
+            mvFireSpots.push_back(pMP->GetWorldPos());
         }
     }
 
