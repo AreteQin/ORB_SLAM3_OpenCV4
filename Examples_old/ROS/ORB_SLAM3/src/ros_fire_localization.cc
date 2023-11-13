@@ -1,6 +1,4 @@
 #include <iostream>
-#include <algorithm>
-#include <fstream>
 #include <chrono>
 #include <ros/ros.h>
 #include <cv_bridge/cv_bridge.h>
@@ -17,10 +15,10 @@
 #include "../../../include/System.h"
 #include "../../../include/Map.h"
 
-
 using namespace std;
 
-void ImageBoxesCallback(ORB_SLAM3::System *pSLAM, ros::Publisher *fire_spots_pub, ros::Publisher *camera_pose_pub, const sensor_msgs::ImageConstPtr &msg,
+void ImageBoxesCallback(ORB_SLAM3::System *pSLAM, ros::Publisher *fire_spots_pub, ros::Publisher *camera_pose_pub,
+                        const sensor_msgs::ImageConstPtr &msg,
                         const vision_msgs::Detection2DArrayConstPtr &msg_fire_spot) {
     // Copy the ros image message to cv::Mat.
     cv_bridge::CvImageConstPtr cv_ptr;
@@ -42,11 +40,11 @@ void ImageBoxesCallback(ORB_SLAM3::System *pSLAM, ros::Publisher *fire_spots_pub
     }
 
     pSLAM->TrackMonocularAndFire(cv_ptr->image, cv_ptr->header.stamp.toSec(), fire_spots);
-    ORB_SLAM3::Map* current_map = pSLAM->GetActiveMap();
+    ORB_SLAM3::Map *current_map = pSLAM->GetActiveMap();
 
     // Publish the fire spots
     geometry_msgs::PoseArray fire_spots_msg;
-    fire_spots_msg.header.stamp = ros::Time::now();
+    fire_spots_msg.header.stamp = msg->header.stamp;
     fire_spots_msg.header.frame_id = "map";
     for (Eigen::Vector3f &fire_spot: current_map->mvFireSpots) {
         geometry_msgs::Pose pose;
@@ -59,7 +57,7 @@ void ImageBoxesCallback(ORB_SLAM3::System *pSLAM, ros::Publisher *fire_spots_pub
 
     // Publish the camera pose
     geometry_msgs::PoseStamped camera_pose_msg;
-    camera_pose_msg.header.stamp = ros::Time::now();
+    camera_pose_msg.header.stamp = msg->header.stamp;
     camera_pose_msg.header.frame_id = "map";
     Eigen::Matrix4f Tcw = pSLAM->GetCurrentPose();
     camera_pose_msg.pose.position.x = Tcw(0, 3);
@@ -91,7 +89,7 @@ int main(int argc, char **argv) {
     // message filter for images
     image_transport::ImageTransport it(nodeHandler);
     image_transport::SubscriberFilter sub_image(it, "/dji_osdk_ros/main_wide_RGB", 1);
-    message_filters::Subscriber <vision_msgs::Detection2DArray> sub_fire_spot;
+    message_filters::Subscriber<vision_msgs::Detection2DArray> sub_fire_spot;
     sub_fire_spot.subscribe(nodeHandler, "/bounding_boxes/fire_spots", 1);
 
     // Publish fire spots
@@ -101,7 +99,7 @@ int main(int argc, char **argv) {
     ros::Publisher camera_pose_pub = nodeHandler.advertise<geometry_msgs::PoseStamped>("/position/camera_pose", 10);
 
     // Sync the subscribed data
-    message_filters::TimeSynchronizer <sensor_msgs::Image, vision_msgs::Detection2DArray>
+    message_filters::TimeSynchronizer<sensor_msgs::Image, vision_msgs::Detection2DArray>
             sync(sub_image, sub_fire_spot, 100);
     sync.registerCallback(boost::bind(&ImageBoxesCallback, &SLAM, &fire_spots_pub, &camera_pose_pub, _1, _2));
 
