@@ -81,7 +81,7 @@ namespace ORB_SLAM3 {
         mspMapPoints.insert(pMP);
 //     if it is a fire spot, print info
         if (pMP->CheckPointType() == 1) {
-//        if (pMP->point_type == 1) {
+            LOG(INFO) << "fire found!";
             // print map point coordinates
             std::cout << "======>Map point coordinates:" << std::endl;
             std::cout << pMP->GetWorldPos() << std::endl;
