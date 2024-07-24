@@ -59,11 +59,11 @@ void ImageBoxesCallback(ORB_SLAM3::System *pSLAM, ros::Publisher *fire_spots_pub
     geometry_msgs::PoseStamped camera_pose_msg;
     camera_pose_msg.header.stamp = msg->header.stamp;
     camera_pose_msg.header.frame_id = "map";
-    Eigen::Matrix4f Tcw = pSLAM->GetCurrentPose();
-    camera_pose_msg.pose.position.x = Tcw(0, 3);
-    camera_pose_msg.pose.position.y = Tcw(1, 3);
-    camera_pose_msg.pose.position.z = Tcw(2, 3);
-    Eigen::Quaternionf q(Tcw.block<3, 3>(0, 0));
+    Eigen::Matrix4f Twc = pSLAM->GetCurrentPose().inverse();
+    camera_pose_msg.pose.position.x = Twc(0, 3);
+    camera_pose_msg.pose.position.y = Twc(1, 3);
+    camera_pose_msg.pose.position.z = Twc(2, 3);
+    Eigen::Quaternionf q(Twc.block<3, 3>(0, 0));
     camera_pose_msg.pose.orientation.x = q.x();
     camera_pose_msg.pose.orientation.y = q.y();
     camera_pose_msg.pose.orientation.z = q.z();
