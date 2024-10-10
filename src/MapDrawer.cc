@@ -188,7 +188,7 @@ namespace ORB_SLAM3
         }
         glEnd();
 
-        glPointSize(mPointSize);
+        glPointSize(mPointSize*2);
         glBegin(GL_POINTS);
         glColor3f(0.0, 1.0, 0.0);
 
@@ -241,7 +241,7 @@ namespace ORB_SLAM3
                 else
                 {
                     //cout << "Child KF: " << vpKFs[i]->mnId << endl;
-                    glLineWidth(mKeyFrameLineWidth);
+                    glLineWidth(mKeyFrameLineWidth*2.35);
                     if (bDrawOptLba)
                     {
                         if (sOptKFs.find(pKF->mnId) != sOptKFs.end())
@@ -295,7 +295,7 @@ namespace ORB_SLAM3
         if (bDrawGraph)
         {
             glLineWidth(mGraphLineWidth);
-            glColor4f(0.0f, 1.0f, 0.0f, 0.6f);
+            glColor4f(1.0f, 0.4f, 0.8f, 0.6f); // Set the color for mutual views
             glBegin(GL_LINES);
 
             // cout << "-----------------Draw graph-----------------" << endl;
@@ -442,7 +442,7 @@ namespace ORB_SLAM3
 #endif
 
         glLineWidth(mCameraLineWidth);
-        glColor3f(0.0f, 1.0f, 0.0f);
+        glColor3f(1.0f, 0.4f, 0.8f); // the color for latest frame
         glBegin(GL_LINES);
         glVertex3f(0, 0, 0);
         glVertex3f(w, h, z);

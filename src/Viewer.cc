@@ -165,7 +165,7 @@ namespace ORB_SLAM3
         mbFinished = false;
         mbStopped = false;
 
-        pangolin::CreateWindowAndBind("ORB-SLAM3: Map Viewer", 1024, 768);
+        pangolin::CreateWindowAndBind("Modified ORB-SLAM3: Map Viewer", 1024, 768);
 
         // 3D Mouse handler requires depth testing to be enabled
         glEnable(GL_DEPTH_TEST);
@@ -314,29 +314,29 @@ namespace ORB_SLAM3
 
 
             d_cam.Activate(s_cam);
-            glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
+            // glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
             // change the background to black
-            glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
-            // draw a grid on the x y plane
-            const float gridSize = 10.0f; // Size of the grid
-            const float gridSpacing = 1.0f; // Spacing between grid lines
-            const float map_height = 0.0;
-            glLineWidth(1.0f);
-            glColor3f(0.5f, 0.5f, 0.5f); // Set grid color to grey
-            glBegin(GL_LINES);
-            for (float i = -gridSize; i <= gridSize; i += gridSpacing)
-            {
-                // Draw lines parallel to the x-axis
-                glVertex3f(i, -map_height, -gridSize);
-                glVertex3f(i, -map_height, gridSize);
-
-                // Draw lines parallel to the y-axis
-                glVertex3f(-gridSize, -map_height, i);
-                glVertex3f(gridSize, -map_height, i);
-            }
-            // rotate the grid along the x axis 30 degrees
-            glRotatef(30, 1, 0, 0);
-            glEnd();
+            glClearColor(0.47f, 0.47f, 0.47f, 1.0f);
+            // // draw a grid on the x y plane
+            // const float gridSize = 10.0f; // Size of the grid
+            // const float gridSpacing = 1.0f; // Spacing between grid lines
+            // const float map_height = 0.0;
+            // glLineWidth(1.0f);
+            // glColor3f(0.5f, 0.5f, 0.5f); // Set grid color to grey
+            // glBegin(GL_LINES);
+            // for (float i = -gridSize; i <= gridSize; i += gridSpacing)
+            // {
+            //     // Draw lines parallel to the x-axis
+            //     glVertex3f(i, -map_height, -gridSize);
+            //     glVertex3f(i, -map_height, gridSize);
+            //
+            //     // Draw lines parallel to the y-axis
+            //     glVertex3f(-gridSize, -map_height, i);
+            //     glVertex3f(gridSize, -map_height, i);
+            // }
+            // // rotate the grid along the x axis 30 degrees
+            // glRotatef(30, 1, 0, 0);
+            // glEnd();
             mpMapDrawer->DrawCurrentCamera(Twc);
             if (menuShowKeyFrames || menuShowGraph || menuShowInertialGraph || menuShowOptLba)
                 mpMapDrawer->DrawKeyFrames(menuShowKeyFrames, menuShowGraph, menuShowInertialGraph, menuShowOptLba);
