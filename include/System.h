@@ -186,11 +186,11 @@ public:
 
     float GetImageScale();
 
-    // Get the active map
-    Map* GetActiveMap();
+    // Get mpAtlas
+    Atlas* GetAtlas() const;
 
     // Get the current pose
-    Eigen::Matrix4f GetCurrentPose();
+    Eigen::Matrix4f GetCurrentPose() const;
 
 #ifdef REGISTER_TIMES
     void InsertRectTime(double& time);
