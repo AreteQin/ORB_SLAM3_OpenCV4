@@ -1,5 +1,10 @@
 # The latest ORB-SLAM3 revised for Ubuntu 20, OpenCV 4.2
 
+To visualize the results of ORB-SLAM3 using RViz
+```bash
+roslaunch '/home/qin/ORB_SLAM3_Ubuntu_20/Examples_old/ROS/ORB_SLAM3/play_bag_and_rviz.launch'
+```
+
 # ORB-SLAM3
 
 ### V1.0, December 22th, 2021

@@ -16,11 +16,15 @@
 #include <sensor_msgs/PointCloud2.h>
 #include <sensor_msgs/point_cloud2_iterator.h>
 #include <std_msgs/Header.h>
+#include <visualization_msgs/Marker.h>
+#include <tf2_geometry_msgs/tf2_geometry_msgs.h>
 #include "MapPoint.h"
 #include "System.h"
 #include "Map.h"
 
 using namespace std;
+
+visualization_msgs::Marker drone_model;
 
 sensor_msgs::PointCloud2 convertMapPointsToPointCloud2(const std::vector<ORB_SLAM3::MapPoint*>& mapPoints,
                                                        const std_msgs::Header& header)
@@ -61,7 +65,7 @@ sensor_msgs::PointCloud2 convertMapPointsToPointCloud2(const std::vector<ORB_SLA
 }
 
 void ImageBoxesCallback(ORB_SLAM3::System* pSLAM, ros::Publisher* fire_spots_pub, tf2_ros::TransformBroadcaster& br,
-                        ros::Publisher* point_cloud_pub, const sensor_msgs::ImageConstPtr& msg,
+                        ros::Publisher* point_cloud_pub, ros::Publisher* marker_pub, const sensor_msgs::ImageConstPtr& msg,
                         const vision_msgs::Detection2DArrayConstPtr& msg_fire_spot)
 {
     // Copy the ros image message to cv::Mat.
@@ -119,23 +123,24 @@ void ImageBoxesCallback(ORB_SLAM3::System* pSLAM, ros::Publisher* fire_spots_pub
     camera_pose_msg.transform.rotation.y = q.y();
     camera_pose_msg.transform.rotation.z = q.z();
     camera_pose_msg.transform.rotation.w = q.w();
+
     br.sendTransform(camera_pose_msg);
 
     // broadcast the static transform of map which is -45 degree rotated around x-axis
-    // geometry_msgs::TransformStamped map;
-    // map.header.stamp = msg->header.stamp;
-    // map.header.frame_id = "world";
-    // map.child_frame_id = "map";
-    // map.transform.translation.x = 0;
-    // map.transform.translation.y = 0;
-    // map.transform.translation.z = 0;
-    // tf2::Quaternion q_map;
-    // q_map.setRPY(-M_PI_2, 0, 0);
-    // map.transform.rotation.x = q_map.x();
-    // map.transform.rotation.y = q_map.y();
-    // map.transform.rotation.z = q_map.z();
-    // map.transform.rotation.w = q_map.w();
-    // br.sendTransform(map);
+    geometry_msgs::TransformStamped map;
+    map.header.stamp = msg->header.stamp;
+    map.header.frame_id = "world";
+    map.child_frame_id = "map";
+    map.transform.translation.x = 0;
+    map.transform.translation.y = 0;
+    map.transform.translation.z = 0.1;
+    tf2::Quaternion q_map;
+    q_map.setRPY(-2.1, 0.05, 0);
+    map.transform.rotation.x = q_map.x();
+    map.transform.rotation.y = q_map.y();
+    map.transform.rotation.z = q_map.z();
+    map.transform.rotation.w = q_map.w();
+    br.sendTransform(map);
 
     // Publish the point cloud
     const vector<ORB_SLAM3::MapPoint*>& vpMPs = current_map->GetAllMapPoints();
@@ -146,6 +151,44 @@ void ImageBoxesCallback(ORB_SLAM3::System* pSLAM, ros::Publisher* fire_spots_pub
     point_cloud_msg.header.frame_id = "map";
     point_cloud_msg = convertMapPointsToPointCloud2(vpMPs, point_cloud_msg.header);
     point_cloud_pub->publish(point_cloud_msg);
+
+    drone_model.header.frame_id = "H20T";
+    drone_model.header.stamp = msg->header.stamp;
+    drone_model.ns = "fbx_marker";
+    drone_model.id = 0;
+    drone_model.type = visualization_msgs::Marker::MESH_RESOURCE;
+    if (std::ifstream("/home/qin/Downloads/TestCodes/dji_m30_model.dae"))
+    {
+        drone_model.mesh_resource = "file:///home/qin/Downloads/TestCodes/dji_m30_model.dae";
+    }
+    else
+    {
+        LOG(ERROR) << "Mesh resource file not found: /home/qin/Downloads/TestCodes/dji_m30_model.dae";
+    }
+    drone_model.action = visualization_msgs::Marker::ADD;
+    drone_model.pose.position.x = 0.0;
+    drone_model.pose.position.y = 0.0;
+    drone_model.pose.position.z = 0.0;
+    drone_model.color.r = 0.5;
+    drone_model.color.g = 0.5;
+    drone_model.color.b = 0.5;
+    drone_model.color.a = 1.0;
+    drone_model.scale.x = 0.001;
+    drone_model.scale.y = 0.001;
+    drone_model.scale.z = 0.001;
+    // rotate the model
+    // Create a quaternion representing the rotation
+    tf2::Quaternion quaternion;
+    quaternion.setRPY(-0.5, 0, 3.14); // Roll, Pitch, Yaw
+    // Convert the quaternion to a geometry_msgs::Quaternion
+    geometry_msgs::Quaternion q_msg;
+    q_msg.x = quaternion.x();
+    q_msg.y = quaternion.y();
+    q_msg.z = quaternion.z();
+    q_msg.w = quaternion.w();
+    // Set the orientation of the drone model marker
+    drone_model.pose.orientation = q_msg;
+    marker_pub->publish(drone_model);
 }
 
 int main(int argc, char** argv)
@@ -173,18 +216,20 @@ int main(int argc, char** argv)
 
     // Publish fire spots
     ros::Publisher fire_spots_pub = nodeHandler.advertise<geometry_msgs::PoseArray>("/position/fire_spots", 10);
-
     // Publish camera pose
     // ros::Publisher camera_pose_pub = nodeHandler.advertise<geometry_msgs::PoseStamped>("/position/camera_pose", 10);
     tf2_ros::TransformBroadcaster br;
-
     // Publish point cloud
     ros::Publisher point_cloud_pub = nodeHandler.advertise<sensor_msgs::PointCloud2>("/point_cloud", 10);
+    // Initialize marker publisher
+    ros::Publisher marker_pub = nodeHandler.advertise<visualization_msgs::Marker>("/visualization_marker/drone", 10);
 
     // Sync the subscribed data
-    typedef message_filters::sync_policies::ApproximateTime<sensor_msgs::Image, vision_msgs::Detection2DArray> MySyncPolicy;
+    typedef message_filters::sync_policies::ApproximateTime<sensor_msgs::Image, vision_msgs::Detection2DArray>
+        MySyncPolicy;
     message_filters::Synchronizer<MySyncPolicy> sync(MySyncPolicy(10), sub_image, sub_fire_spot);
-    sync.registerCallback(boost::bind(&ImageBoxesCallback, &SLAM, &fire_spots_pub, boost::ref(br), &point_cloud_pub, _1, _2));
+    sync.registerCallback(boost::bind(&ImageBoxesCallback, &SLAM, &fire_spots_pub, boost::ref(br), &point_cloud_pub,
+                                      &marker_pub, _1, _2));
 
     ros::spin();
 
