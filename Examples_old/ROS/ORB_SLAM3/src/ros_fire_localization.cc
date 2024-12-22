@@ -5,15 +5,17 @@
 #include <opencv2/core/core.hpp>
 #include "vision_msgs/Detection2DArray.h"
 #include <message_filters/subscriber.h>
-#include <message_filters/time_synchronizer.h>
 #include <glog/logging.h>
 #include <image_transport/image_transport.h>
 #include <image_transport/subscriber_filter.h>
 #include <geometry_msgs/PoseArray.h>
-#include <geometry_msgs/PoseStamped.h>
-#include <ros/advertise_options.h>
+#include <message_filters/sync_policies/approximate_time.h>
+#include <tf2_ros/transform_broadcaster.h>
+#include <tf2/LinearMath/Quaternion.h>
+#include <geometry_msgs/TransformStamped.h>
 #include <sensor_msgs/PointCloud2.h>
 #include <sensor_msgs/point_cloud2_iterator.h>
+#include <std_msgs/Header.h>
 #include "MapPoint.h"
 #include "System.h"
 #include "Map.h"
@@ -58,7 +60,7 @@ sensor_msgs::PointCloud2 convertMapPointsToPointCloud2(const std::vector<ORB_SLA
     return pointCloudMsg;
 }
 
-void ImageBoxesCallback(ORB_SLAM3::System* pSLAM, ros::Publisher* fire_spots_pub, ros::Publisher* camera_pose_pub,
+void ImageBoxesCallback(ORB_SLAM3::System* pSLAM, ros::Publisher* fire_spots_pub, tf2_ros::TransformBroadcaster& br,
                         ros::Publisher* point_cloud_pub, const sensor_msgs::ImageConstPtr& msg,
                         const vision_msgs::Detection2DArrayConstPtr& msg_fire_spot)
 {
@@ -89,7 +91,6 @@ void ImageBoxesCallback(ORB_SLAM3::System* pSLAM, ros::Publisher* fire_spots_pub
     if (!current_map)
         return;
 
-
     // Publish the fire spots
     geometry_msgs::PoseArray fire_spots_msg;
     fire_spots_msg.header.stamp = msg->header.stamp;
@@ -104,20 +105,37 @@ void ImageBoxesCallback(ORB_SLAM3::System* pSLAM, ros::Publisher* fire_spots_pub
     }
     fire_spots_pub->publish(fire_spots_msg);
 
-    // Publish the camera pose
-    geometry_msgs::PoseStamped camera_pose_msg;
+    // Publish the camera pose as tf2
+    geometry_msgs::TransformStamped camera_pose_msg;
     camera_pose_msg.header.stamp = msg->header.stamp;
     camera_pose_msg.header.frame_id = "map";
+    camera_pose_msg.child_frame_id = "H20T";
     Eigen::Matrix4f Twc = pSLAM->GetCurrentPose().inverse();
-    camera_pose_msg.pose.position.x = Twc(0, 3);
-    camera_pose_msg.pose.position.y = Twc(1, 3);
-    camera_pose_msg.pose.position.z = Twc(2, 3);
+    camera_pose_msg.transform.translation.x = Twc(0, 3);
+    camera_pose_msg.transform.translation.y = Twc(1, 3);
+    camera_pose_msg.transform.translation.z = Twc(2, 3);
     Eigen::Quaternionf q(Twc.block<3, 3>(0, 0));
-    camera_pose_msg.pose.orientation.x = q.x();
-    camera_pose_msg.pose.orientation.y = q.y();
-    camera_pose_msg.pose.orientation.z = q.z();
-    camera_pose_msg.pose.orientation.w = q.w();
-    camera_pose_pub->publish(camera_pose_msg);
+    camera_pose_msg.transform.rotation.x = q.x();
+    camera_pose_msg.transform.rotation.y = q.y();
+    camera_pose_msg.transform.rotation.z = q.z();
+    camera_pose_msg.transform.rotation.w = q.w();
+    br.sendTransform(camera_pose_msg);
+
+    // broadcast the static transform of map which is -45 degree rotated around x-axis
+    // geometry_msgs::TransformStamped map;
+    // map.header.stamp = msg->header.stamp;
+    // map.header.frame_id = "world";
+    // map.child_frame_id = "map";
+    // map.transform.translation.x = 0;
+    // map.transform.translation.y = 0;
+    // map.transform.translation.z = 0;
+    // tf2::Quaternion q_map;
+    // q_map.setRPY(-M_PI_2, 0, 0);
+    // map.transform.rotation.x = q_map.x();
+    // map.transform.rotation.y = q_map.y();
+    // map.transform.rotation.z = q_map.z();
+    // map.transform.rotation.w = q_map.w();
+    // br.sendTransform(map);
 
     // Publish the point cloud
     const vector<ORB_SLAM3::MapPoint*>& vpMPs = current_map->GetAllMapPoints();
@@ -157,16 +175,16 @@ int main(int argc, char** argv)
     ros::Publisher fire_spots_pub = nodeHandler.advertise<geometry_msgs::PoseArray>("/position/fire_spots", 10);
 
     // Publish camera pose
-    ros::Publisher camera_pose_pub = nodeHandler.advertise<geometry_msgs::PoseStamped>("/position/camera_pose", 10);
+    // ros::Publisher camera_pose_pub = nodeHandler.advertise<geometry_msgs::PoseStamped>("/position/camera_pose", 10);
+    tf2_ros::TransformBroadcaster br;
 
     // Publish point cloud
     ros::Publisher point_cloud_pub = nodeHandler.advertise<sensor_msgs::PointCloud2>("/point_cloud", 10);
 
     // Sync the subscribed data
-    message_filters::TimeSynchronizer<sensor_msgs::Image, vision_msgs::Detection2DArray>
-        sync(sub_image, sub_fire_spot, 10);
-    sync.registerCallback(boost::bind(&ImageBoxesCallback, &SLAM, &fire_spots_pub, &camera_pose_pub, &point_cloud_pub,
-                                      _1, _2));
+    typedef message_filters::sync_policies::ApproximateTime<sensor_msgs::Image, vision_msgs::Detection2DArray> MySyncPolicy;
+    message_filters::Synchronizer<MySyncPolicy> sync(MySyncPolicy(10), sub_image, sub_fire_spot);
+    sync.registerCallback(boost::bind(&ImageBoxesCallback, &SLAM, &fire_spots_pub, boost::ref(br), &point_cloud_pub, _1, _2));
 
     ros::spin();
 
