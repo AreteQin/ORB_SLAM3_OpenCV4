@@ -157,29 +157,29 @@ void ImageBoxesCallback(ORB_SLAM3::System* pSLAM, ros::Publisher* fire_spots_pub
     drone_model.ns = "fbx_marker";
     drone_model.id = 0;
     drone_model.type = visualization_msgs::Marker::MESH_RESOURCE;
-    if (std::ifstream("/home/qin/Downloads/TestCodes/dji_m30_model.dae"))
+    if (std::ifstream("/home/qin/ORB_SLAM3_Ubuntu_20/drone.dae"))
     {
-        drone_model.mesh_resource = "file:///home/qin/Downloads/TestCodes/dji_m30_model.dae";
+        drone_model.mesh_resource = "file:///home/qin/ORB_SLAM3_Ubuntu_20/drone.dae";
     }
     else
     {
-        LOG(ERROR) << "Mesh resource file not found: /home/qin/Downloads/TestCodes/dji_m30_model.dae";
+        LOG(ERROR) << "Mesh resource file not found: /home/qin/ORB_SLAM3_Ubuntu_20/drone.dae";
     }
     drone_model.action = visualization_msgs::Marker::ADD;
     drone_model.pose.position.x = 0.0;
-    drone_model.pose.position.y = 0.0;
-    drone_model.pose.position.z = 0.0;
+    drone_model.pose.position.y = -0.2;
+    drone_model.pose.position.z = -0.5;
     drone_model.color.r = 0.5;
     drone_model.color.g = 0.5;
     drone_model.color.b = 0.5;
     drone_model.color.a = 1.0;
-    drone_model.scale.x = 0.001;
-    drone_model.scale.y = 0.001;
-    drone_model.scale.z = 0.001;
+    drone_model.scale.x = 0.1;
+    drone_model.scale.y = 0.1;
+    drone_model.scale.z = 0.1;
     // rotate the model
     // Create a quaternion representing the rotation
     tf2::Quaternion quaternion;
-    quaternion.setRPY(-0.5, 0, 3.14); // Roll, Pitch, Yaw
+    quaternion.setRPY(1.0, 3.14, 0.0); // Roll, Pitch, Yaw
     // Convert the quaternion to a geometry_msgs::Quaternion
     geometry_msgs::Quaternion q_msg;
     q_msg.x = quaternion.x();
