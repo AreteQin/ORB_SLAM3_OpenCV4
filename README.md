@@ -1,4 +1,4 @@
-# The latest ORB-SLAM3 revised for Ubuntu 20, OpenCV 4.2
+# The latest ORB-SLAM3 revised for OpenCV 4
 
 To visualize the results of ORB-SLAM3 using RViz
 ```bash
