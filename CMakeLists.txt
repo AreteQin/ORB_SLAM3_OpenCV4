@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8)
-project(ORB_SLAM3)
+project(ORB_SLAM3_OpenCV4)
 
 IF (NOT CMAKE_BUILD_TYPE)
     SET(CMAKE_BUILD_TYPE Release)
@@ -128,7 +128,8 @@ add_library(${PROJECT_NAME} SHARED
         include/TwoViewReconstruction.h
         include/SerializationUtils.h
         include/Config.h
-        include/Settings.h)
+        include/Settings.h
+        include/GpsTypes.h)
 
 add_subdirectory(Thirdparty/g2o)
 
