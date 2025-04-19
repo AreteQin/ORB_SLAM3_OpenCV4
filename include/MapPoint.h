@@ -34,243 +34,222 @@
 #include <boost/serialization/array.hpp>
 #include <boost/serialization/map.hpp>
 
-namespace ORB_SLAM3 {
+namespace ORB_SLAM3
+{
 
-    class KeyFrame;
+class KeyFrame;
+class Map;
+class Frame;
 
-    class Map;
+class MapPoint
+{
 
-    class Frame;
-
-    class MapPoint {
-
-        friend class boost::serialization::access;
-
-        template<class Archive>
-        void serialize(Archive &ar, const unsigned int version) {
-            ar & mnId;
-            ar & mnFirstKFid;
-            ar & mnFirstFrame;
-            ar & nObs;
-            // Variables used by the tracking
-            //ar & mTrackProjX;
-            //ar & mTrackProjY;
-            //ar & mTrackDepth;
-            //ar & mTrackDepthR;
-            //ar & mTrackProjXR;
-            //ar & mTrackProjYR;
-            //ar & mbTrackInView;
-            //ar & mbTrackInViewR;
-            //ar & mnTrackScaleLevel;
-            //ar & mnTrackScaleLevelR;
-            //ar & mTrackViewCos;
-            //ar & mTrackViewCosR;
-            //ar & mnTrackReferenceForFrame;
-            //ar & mnLastFrameSeen;
-
-            // Variables used by local mapping
-            //ar & mnBALocalForKF;
-            //ar & mnFuseCandidateForKF;
-
-            // Variables used by loop closing and merging
-            //ar & mnLoopPointForKF;
-            //ar & mnCorrectedByKF;
-            //ar & mnCorrectedReference;
-            //serializeMatrix(ar,mPosGBA,version);
-            //ar & mnBAGlobalForKF;
-            //ar & mnBALocalForMerge;
-            //serializeMatrix(ar,mPosMerge,version);
-            //serializeMatrix(ar,mNormalVectorMerge,version);
-
-            // Protected variables
-            ar & boost::serialization::make_array(mWorldPos.data(), mWorldPos.size());
-            ar & boost::serialization::make_array(mNormalVector.data(), mNormalVector.size());
-            //ar & BOOST_SERIALIZATION_NVP(mBackupObservationsId);
-            //ar & mObservations;
-            ar & mBackupObservationsId1;
-            ar & mBackupObservationsId2;
-            serializeMatrix(ar, mDescriptor, version);
-            ar & mBackupRefKFId;
-            //ar & mnVisible;
-            //ar & mnFound;
-
-            ar & mbBad;
-            ar & mBackupReplacedId;
-
-            ar & mfMinDistance;
-            ar & mfMaxDistance;
-
-        }
-
-
-    public:
-        EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-
-        MapPoint();
-
-        MapPoint(const cv::KeyPoint uv, const Eigen::Vector3f &Pos, KeyFrame *pRefKF, Map *pMap);
-
-        MapPoint(const double invDepth, cv::Point2f uv_init, KeyFrame *pRefKF, KeyFrame *pHostKF, Map *pMap);
-
-        MapPoint(const Eigen::Vector3f &Pos, Map *pMap, Frame *pFrame, const int &idxF);
-
-        void SetWorldPos(const Eigen::Vector3f &Pos);
-
-        Eigen::Vector3f GetWorldPos();
-
-        Eigen::Vector3f GetNormal();
-
-        void SetNormalVector(const Eigen::Vector3f &normal);
-
-        KeyFrame *GetReferenceKeyFrame();
-
-        std::map<KeyFrame *, std::tuple<int, int>> GetObservations();
-
-        int Observations();
-
-        void AddObservation(KeyFrame *pKF, int idx);
-
-        void EraseObservation(KeyFrame *pKF);
-
-        std::tuple<int, int> GetIndexInKeyFrame(KeyFrame *pKF);
-
-        bool IsInKeyFrame(KeyFrame *pKF);
-
-        void SetBadFlag();
-
-        bool isBad();
-
-        void Replace(MapPoint *pMP);
-
-        MapPoint *GetReplaced();
-
-        void IncreaseVisible(int n = 1);
-
-        void IncreaseFound(int n = 1);
-
-        float GetFoundRatio();
-
-        inline int GetFound() {
-            return mnFound;
-        }
-
-        void ComputeDistinctiveDescriptors();
-
-        cv::Mat GetDescriptor();
-
-        void UpdateNormalAndDepth();
-
-        float GetMinDistanceInvariance();
-
-        float GetMaxDistanceInvariance();
-
-        int PredictScale(const float &currentDist, KeyFrame *pKF);
-
-        int PredictScale(const float &currentDist, Frame *pF);
-
-        Map *GetMap();
-
-        void UpdateMap(Map *pMap);
-
-        void PrintObservations();
-
-        void PreSave(set<KeyFrame *> &spKF, set<MapPoint *> &spMP);
-
-        void PostLoad(map<long unsigned int, KeyFrame *> &mpKFid, map<long unsigned int, MapPoint *> &mpMPid);
-
-    public:
-        // for fire bounding box
-        unsigned int point_type = 0; // 0: normal, 1: fire, 2: smoke
-        unsigned int CheckPointType() const;
-
-        long unsigned int mnId;
-        static long unsigned int nNextId;
-        long int mnFirstKFid;
-        long int mnFirstFrame;
-        int nObs;
-
+    friend class boost::serialization::access;
+    template<class Archive>
+    void serialize(Archive & ar, const unsigned int version)
+    {
+        ar & mnId;
+        ar & mnFirstKFid;
+        ar & mnFirstFrame;
+        ar & nObs;
         // Variables used by the tracking
-        float mTrackProjX;
-        float mTrackProjY;
-        float mTrackDepth;
-        float mTrackDepthR;
-        float mTrackProjXR;
-        float mTrackProjYR;
-        bool mbTrackInView, mbTrackInViewR;
-        int mnTrackScaleLevel, mnTrackScaleLevelR;
-        float mTrackViewCos, mTrackViewCosR;
-        long unsigned int mnTrackReferenceForFrame;
-        long unsigned int mnLastFrameSeen;
+        //ar & mTrackProjX;
+        //ar & mTrackProjY;
+        //ar & mTrackDepth;
+        //ar & mTrackDepthR;
+        //ar & mTrackProjXR;
+        //ar & mTrackProjYR;
+        //ar & mbTrackInView;
+        //ar & mbTrackInViewR;
+        //ar & mnTrackScaleLevel;
+        //ar & mnTrackScaleLevelR;
+        //ar & mTrackViewCos;
+        //ar & mTrackViewCosR;
+        //ar & mnTrackReferenceForFrame;
+        //ar & mnLastFrameSeen;
 
         // Variables used by local mapping
-        long unsigned int mnBALocalForKF;
-        long unsigned int mnFuseCandidateForKF;
+        //ar & mnBALocalForKF;
+        //ar & mnFuseCandidateForKF;
 
-        // Variables used by loop closing
-        long unsigned int mnLoopPointForKF;
-        long unsigned int mnCorrectedByKF;
-        long unsigned int mnCorrectedReference;
-        Eigen::Vector3f mPosGBA;
-        long unsigned int mnBAGlobalForKF;
-        long unsigned int mnBALocalForMerge;
+        // Variables used by loop closing and merging
+        //ar & mnLoopPointForKF;
+        //ar & mnCorrectedByKF;
+        //ar & mnCorrectedReference;
+        //serializeMatrix(ar,mPosGBA,version);
+        //ar & mnBAGlobalForKF;
+        //ar & mnBALocalForMerge;
+        //serializeMatrix(ar,mPosMerge,version);
+        //serializeMatrix(ar,mNormalVectorMerge,version);
 
-        // Variable used by merging
-        Eigen::Vector3f mPosMerge;
-        Eigen::Vector3f mNormalVectorMerge;
+        // Protected variables
+        ar & boost::serialization::make_array(mWorldPos.data(), mWorldPos.size());
+        ar & boost::serialization::make_array(mNormalVector.data(), mNormalVector.size());
+        //ar & BOOST_SERIALIZATION_NVP(mBackupObservationsId);
+        //ar & mObservations;
+        ar & mBackupObservationsId1;
+        ar & mBackupObservationsId2;
+        serializeMatrix(ar,mDescriptor,version);
+        ar & mBackupRefKFId;
+        //ar & mnVisible;
+        //ar & mnFound;
+
+        ar & mbBad;
+        ar & mBackupReplacedId;
+
+        ar & mfMinDistance;
+        ar & mfMaxDistance;
+
+    }
 
 
-        // Fopr inverse depth optimization
-        double mInvDepth;
-        double mInitU;
-        double mInitV;
-        KeyFrame *mpHostKF;
+public:
+    EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+    MapPoint();
 
-        static std::mutex mGlobalMutex;
+    MapPoint(const Eigen::Vector3f &Pos, KeyFrame* pRefKF, Map* pMap);
+    MapPoint(const double invDepth, cv::Point2f uv_init, KeyFrame* pRefKF, KeyFrame* pHostKF, Map* pMap);
+    MapPoint(const Eigen::Vector3f &Pos,  Map* pMap, Frame* pFrame, const int &idxF);
 
-        unsigned int mnOriginMapId;
+    void SetWorldPos(const Eigen::Vector3f &Pos);
+    Eigen::Vector3f GetWorldPos();
 
-    protected:
+    Eigen::Vector3f GetNormal();
+    void SetNormalVector(const Eigen::Vector3f& normal);
 
-        // Position in absolute coordinates
-        Eigen::Vector3f mWorldPos;
+    KeyFrame* GetReferenceKeyFrame();
 
-        // Keyframes observing the point and associated index in keyframe
-        std::map<KeyFrame *, std::tuple<int, int> > mObservations;
-        // For save relation without pointer, this is necessary for save/load function
-        std::map<long unsigned int, int> mBackupObservationsId1;
-        std::map<long unsigned int, int> mBackupObservationsId2;
+    std::map<KeyFrame*,std::tuple<int,int>> GetObservations();
+    int Observations();
 
-        // Mean viewing direction
-        Eigen::Vector3f mNormalVector;
+    void AddObservation(KeyFrame* pKF,int idx);
+    void EraseObservation(KeyFrame* pKF);
 
-        // Best descriptor to fast matching
-        cv::Mat mDescriptor;
+    std::tuple<int,int> GetIndexInKeyFrame(KeyFrame* pKF);
+    bool IsInKeyFrame(KeyFrame* pKF);
 
-        // Reference KeyFrame
-        KeyFrame *mpRefKF;
-        long unsigned int mBackupRefKFId;
+    void SetBadFlag();
+    bool isBad();
 
-        // Tracking counters
-        int mnVisible;
-        int mnFound;
+    void Replace(MapPoint* pMP);
+    MapPoint* GetReplaced();
 
-        // Bad flag (we do not currently erase MapPoint from memory)
-        bool mbBad;
-        MapPoint *mpReplaced;
-        // For save relation without pointer, this is necessary for save/load function
-        long long int mBackupReplacedId;
+    void IncreaseVisible(int n=1);
+    void IncreaseFound(int n=1);
+    float GetFoundRatio();
+    inline int GetFound(){
+        return mnFound;
+    }
 
-        // Scale invariance distances
-        float mfMinDistance;
-        float mfMaxDistance;
+    void ComputeDistinctiveDescriptors();
 
-        Map *mpMap;
+    cv::Mat GetDescriptor();
 
-        // Mutex
-        std::mutex mMutexPos;
-        std::mutex mMutexFeatures;
-        std::mutex mMutexMap;
-    };
+    void UpdateNormalAndDepth();
+
+    float GetMinDistanceInvariance();
+    float GetMaxDistanceInvariance();
+    int PredictScale(const float &currentDist, KeyFrame*pKF);
+    int PredictScale(const float &currentDist, Frame* pF);
+
+    Map* GetMap();
+    void UpdateMap(Map* pMap);
+
+    void PrintObservations();
+
+    void PreSave(set<KeyFrame*>& spKF,set<MapPoint*>& spMP);
+    void PostLoad(map<long unsigned int, KeyFrame*>& mpKFid, map<long unsigned int, MapPoint*>& mpMPid);
+
+public:
+    long unsigned int mnId;
+    static long unsigned int nNextId;
+    long int mnFirstKFid;
+    long int mnFirstFrame;
+    int nObs;
+
+    // Variables used by the tracking
+    float mTrackProjX;
+    float mTrackProjY;
+    float mTrackDepth;
+    float mTrackDepthR;
+    float mTrackProjXR;
+    float mTrackProjYR;
+    bool mbTrackInView, mbTrackInViewR;
+    int mnTrackScaleLevel, mnTrackScaleLevelR;
+    float mTrackViewCos, mTrackViewCosR;
+    long unsigned int mnTrackReferenceForFrame;
+    long unsigned int mnLastFrameSeen;
+
+    // Variables used by local mapping
+    long unsigned int mnBALocalForKF;
+    long unsigned int mnFuseCandidateForKF;
+
+    // Variables used by loop closing
+    long unsigned int mnLoopPointForKF;
+    long unsigned int mnCorrectedByKF;
+    long unsigned int mnCorrectedReference;
+    Eigen::Vector3f mPosGBA;
+    long unsigned int mnBAGlobalForKF;
+    long unsigned int mnBALocalForMerge;
+
+    // Variable used by merging
+    Eigen::Vector3f mPosMerge;
+    Eigen::Vector3f mNormalVectorMerge;
+
+
+    // Fopr inverse depth optimization
+    double mInvDepth;
+    double mInitU;
+    double mInitV;
+    KeyFrame* mpHostKF;
+
+    static std::mutex mGlobalMutex;
+
+    unsigned int mnOriginMapId;
+
+protected:
+
+     // Position in absolute coordinates
+     Eigen::Vector3f mWorldPos;
+
+     // Keyframes observing the point and associated index in keyframe
+     std::map<KeyFrame*,std::tuple<int,int> > mObservations;
+     // For save relation without pointer, this is necessary for save/load function
+     std::map<long unsigned int, int> mBackupObservationsId1;
+     std::map<long unsigned int, int> mBackupObservationsId2;
+
+     // Mean viewing direction
+     Eigen::Vector3f mNormalVector;
+
+     // Best descriptor to fast matching
+     cv::Mat mDescriptor;
+
+     // Reference KeyFrame
+     KeyFrame* mpRefKF;
+     long unsigned int mBackupRefKFId;
+
+     // Tracking counters
+     int mnVisible;
+     int mnFound;
+
+     // Bad flag (we do not currently erase MapPoint from memory)
+     bool mbBad;
+     MapPoint* mpReplaced;
+     // For save relation without pointer, this is necessary for save/load function
+     long long int mBackupReplacedId;
+
+     // Scale invariance distances
+     float mfMinDistance;
+     float mfMaxDistance;
+
+     Map* mpMap;
+
+     // Mutex
+     std::mutex mMutexPos;
+     std::mutex mMutexFeatures;
+     std::mutex mMutexMap;
+
+};
 
 } //namespace ORB_SLAM
 
