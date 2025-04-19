@@ -159,17 +159,6 @@ namespace ORB_SLAM3 {
                         // change map point box color in tracking preview window
                         cv::Scalar color_red(0, 0, 255);
                         // if it is a fire spot, use red box to highlight it
-                        for (cv::Rect box: currentFrame.mFireSpots) {
-                            // divide by mImageScale to get the correct box size
-                            box.x /= imageScale;
-                            box.y /= imageScale;
-                            box.width /= imageScale;
-                            box.height /= imageScale;
-                            if (box.contains(point)) {
-                                cv::rectangle(im, box.br(), box.tl(), color_red, 3, 8, 0);
-                                break;
-                            }
-                        }
                         cv::rectangle(im, pt1, pt2, standardColor);
 
                         // does not work, segmentation fault

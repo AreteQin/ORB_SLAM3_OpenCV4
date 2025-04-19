@@ -572,7 +572,7 @@ namespace ORB_SLAM3
             for (size_t i_gps = 0; i_gps < vGpsMeas.size(); i_gps++)
                 mpTracker->GrabGpsData(vGpsMeas[i_gps]);
 
-        Sophus::SE3f Tcw = mpTracker->GrabImageMonocular(imToFeed, timestamp, filename, resized_fire_spots);
+        Sophus::SE3f Tcw = mpTracker->GrabImageMonocular(imToFeed, timestamp, filename);
 
         unique_lock<mutex> lock2(mMutexState);
         mTrackingState = mpTracker->mState;

@@ -100,9 +100,6 @@ namespace ORB_SLAM3 {
         SetPose(F.GetPose());
 
         mnOriginMapId = pMap->GetId();
-
-        // fire spots
-        mFireSpots = F.mFireSpots;
     }
 
     void KeyFrame::ComputeBoW() {
