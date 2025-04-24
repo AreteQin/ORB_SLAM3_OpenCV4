@@ -24,8 +24,6 @@
 
 using namespace std;
 
-visualization_msgs::Marker drone_model;
-
 sensor_msgs::PointCloud2 convertMapPointsToPointCloud2(const std::vector<ORB_SLAM3::MapPoint*>& mapPoints,
                                                        const std_msgs::Header& header)
 {
