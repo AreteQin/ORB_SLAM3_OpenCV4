@@ -1,5 +1,10 @@
 # The latest ORB-SLAM3 revised for OpenCV 4
 
+## Configuration
+`./Thirdparty/install_pangolin.sh`
+
+`sudo apt install libgoogle-glog-dev libssl-dev`
+
 # ORB-SLAM3
 
 ### V1.0, December 22th, 2021
