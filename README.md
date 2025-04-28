@@ -1,4 +1,4 @@
-# The latest ORB-SLAM3 revised for OpenCV 4
+# The latest ORB-SLAM3 revised for OpenCV 4 and the latest Pangolin
 
 ## Configuration
 `./Thirdparty/install_pangolin.sh`
