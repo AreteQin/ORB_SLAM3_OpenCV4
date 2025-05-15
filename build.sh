@@ -1,3 +1,5 @@
+sudo apt install libssl-dev libopencv-dev libboost-dev libboost-serialization-dev libgoogle-glog-dev 
+
 echo "Configuring and building Thirdparty/DBoW2 ..."
 
 cd Thirdparty/DBoW2
