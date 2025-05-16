@@ -6,7 +6,7 @@
 `sudo apt install libssl-dev libopencv-dev libboost-dev libboost-serialization-dev libgoogle-glog-dev`
 
 ## Run with your USB camera
-`./Examples/Mono/mono_usbcam Vocabulary/ORBvoc.txt Examples/Mono/surface_pro6.yaml 1 30`
+`./Examples/Monocular/mono_usbcam Vocabulary/ORBvoc.txt Examples/Monocular/surface_pro6.yaml 1 30`
 
 # ORB-SLAM3
 
