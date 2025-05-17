@@ -42,8 +42,6 @@ int main(int argc, char** argv) {
 
     const string vocab_file   = argv[1];
     const string settings_yml = argv[2];
-    const bool   save_suffix  = (argc == 4);
-    const string suffix       = save_suffix ? argv[3] : "";
 
     // ---------------------------------------------------------------------
     // 1. Open the Surface Pro 6 rear camera -------------------------------
@@ -117,13 +115,5 @@ int main(int argc, char** argv) {
     cout << "\nShutting down SLAM …\n";
     SLAM.Shutdown();
 
-    string kf_file  = save_suffix ? "KeyFrameTrajectory_" + suffix + ".txt"
-                                  : "KeyFrameTrajectory.txt";
-    string cam_file = save_suffix ? "CameraTrajectory_" + suffix + ".txt"
-                                  : "CameraTrajectory.txt";
-    SLAM.SaveKeyFrameTrajectoryEuRoC(kf_file);
-    SLAM.SaveTrajectoryEuRoC(cam_file);
-
-    cout << "Trajectories saved to " << kf_file << " and " << cam_file << endl;
     return EXIT_SUCCESS;
 }
