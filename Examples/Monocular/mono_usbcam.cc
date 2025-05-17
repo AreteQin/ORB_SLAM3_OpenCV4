@@ -36,7 +36,7 @@ inline double Now() {
 int main(int argc, char** argv) {
     if (argc < 3 || argc > 4) {
         cerr << "\nUsage: " << argv[0]
-             << " <path_to_vocabulary> <path_to_settings_yaml> [trajectory_suffix]\n";
+             << " <path_to_vocabulary> <path_to_settings_yaml>\n";
         return EXIT_FAILURE;
     }
 
