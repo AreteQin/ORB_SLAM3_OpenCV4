@@ -1,22 +1,6 @@
 // -----------------------------------------------------------------------------
-// mono_webcam.cc  —  Run ORB-SLAM3 in live monocular mode with an OpenCV camera
-// -----------------------------------------------------------------------------
-// Usage:
-//   ./mono_webcam <path_to_vocabulary> <path_to_settings_yaml>
-//                 <camera_id|device_path> [fps] [trajectory_suffix]
-//
-//   <camera_id|device_path>  0, 1, ... for /dev/video*, or full path e.g. /dev/video2
-//   [fps]                    optional capture framerate (default 30 Hz)
-//   [trajectory_suffix]      if given, trajectories are saved to
-//                            KeyFrameTrajectory_<suffix>.txt and
-//                            CameraTrajectory_<suffix>.txt.
-//
-// Build inside ORB_SLAM3 root (replace opencv4 with opencv if needed):
-//   g++ -std=c++14 -O3 mono_webcam.cc \
-//       `pkg-config --cflags --libs opencv4 pangolin` \
-//       -lORB_SLAM3 -o mono_webcam
-// -----------------------------------------------------------------------------
-// This file is based on ORB-SLAM3 examples and keeps the same licence (GPL-3+).
+// mono_webcam_rear.cc
+//   Run ORB-SLAM3 live monocular on the Surface Pro 6 rear camera.
 // -----------------------------------------------------------------------------
 
 #include <System.h>
@@ -39,10 +23,9 @@ using namespace std;
 
 namespace {
 volatile std::sig_atomic_t g_stop_requested = 0;
-
 void SigIntHandler(int) { g_stop_requested = 1; }
 
-// Return current (monotonic) time in seconds as double
+// Return current time in seconds
 inline double Now() {
     return std::chrono::duration<double>(
                std::chrono::steady_clock::now().time_since_epoch())
@@ -51,106 +34,93 @@ inline double Now() {
 } // namespace
 
 int main(int argc, char** argv) {
-    if (argc < 4 || argc > 6) {
+    if (argc < 3 || argc > 4) {
         cerr << "\nUsage: " << argv[0]
-             << " <path_to_vocabulary> <path_to_settings_yaml>"
-                " <camera_id|device_path> [fps] [trajectory_suffix]\n";
+             << " <path_to_vocabulary> <path_to_settings_yaml> [trajectory_suffix]\n";
         return EXIT_FAILURE;
     }
 
     const string vocab_file   = argv[1];
     const string settings_yml = argv[2];
-    const string cam_arg      = argv[3];
-    const double desired_fps  = (argc >= 5) ? std::stod(argv[4]) : 30.0;
-    const double frame_period = 1.0 / desired_fps;   // seconds
-    const bool   save_suffix  = (argc == 6);
-    const string suffix       = save_suffix ? string(argv[5]) : "";
+    const bool   save_suffix  = (argc == 4);
+    const string suffix       = save_suffix ? argv[3] : "";
 
     // ---------------------------------------------------------------------
-    // 1. Open camera -------------------------------------------------------
+    // 1. Open the Surface Pro 6 rear camera -------------------------------
     // ---------------------------------------------------------------------
-    cv::VideoCapture cap;
-    try {
-        // Try to interpret the argument as an integer camera index first
-        int cam_id = std::stoi(cam_arg);
-        cap.open(cam_id, cv::CAP_ANY);
-    } catch (const std::invalid_argument&) {
-        // Fallback: treat as device/path name
-        cap.open(cam_arg, cv::CAP_ANY);
-    }
-
+    const string device = "/dev/video42";
+    cv::VideoCapture cap(device, cv::CAP_V4L2);  // use V4L2 backend :contentReference[oaicite:3]{index=3}
     if (!cap.isOpened()) {
-        cerr << "ERROR: Could not open camera: " << cam_arg << endl;
+        cerr << "ERROR: Could not open rear camera at " << device << endl;
         return EXIT_FAILURE;
     }
 
-    cap.set(cv::CAP_PROP_FPS, desired_fps);
+    // Limit to 1280×720 to prevent data-stream errors :contentReference[oaicite:4]{index=4}
+    cap.set(cv::CAP_PROP_FRAME_WIDTH, 1280);
+    cap.set(cv::CAP_PROP_FRAME_HEIGHT, 720);
 
-    cout << "Camera opened → resolution: " << cap.get(cv::CAP_PROP_FRAME_WIDTH)
-         << "×" << cap.get(cv::CAP_PROP_FRAME_HEIGHT)
-         << ", target FPS: " << desired_fps << endl;
+    cout << "Rear camera opened: "
+         << cap.get(cv::CAP_PROP_FRAME_WIDTH)  << "×"
+         << cap.get(cv::CAP_PROP_FRAME_HEIGHT) << endl;
 
     // ---------------------------------------------------------------------
-    // 2. Initialise ORB-SLAM3 ---------------------------------------------
+    // 2. Initialise ORB-SLAM3 ----------------------------------------------
     // ---------------------------------------------------------------------
-    ORB_SLAM3::System SLAM(vocab_file, settings_yml, ORB_SLAM3::System::MONOCULAR,
-                           true /* Enable Pangolin viewer */);
+    ORB_SLAM3::System SLAM(vocab_file, settings_yml, ORB_SLAM3::System::MONOCULAR, true);
+    signal(SIGINT, SigIntHandler);
 
     const float imageScale = SLAM.GetImageScale();
+    auto t_prev = chrono::steady_clock::now();
+    const double desired_fps = 30.0;
+    const double frame_period = 1.0 / desired_fps;
 
-    std::signal(SIGINT, SigIntHandler);
+    cv::Mat frame;
+    const string win = "ORB-SLAM3 Rear Camera";
+    cv::namedWindow(win, cv::WINDOW_AUTOSIZE);
 
-    cout << "Press Ctrl-C, ESC, or close Pangolin window to exit.\n";
-
-    // Timing helpers
-    std::chrono::steady_clock::time_point t_prev = std::chrono::steady_clock::now();
-
+    // ---------------------------------------------------------------------
+    // 3. Capture, correct orientation, and SLAM track ----------------------
+    // ---------------------------------------------------------------------
     while (!g_stop_requested) {
-        cv::Mat frame;
         if (!cap.read(frame) || frame.empty()) {
-            cerr << "Camera frame empty — aborting." << endl;
+            cerr << "ERROR: Blank frame grabbed — aborting.\n";
             break;
         }
 
+        // Resize if needed
         if (imageScale != 1.0f) {
-            cv::resize(frame, frame, cv::Size(), imageScale, imageScale,
-                       cv::INTER_LINEAR);
+            cv::resize(frame, frame, cv::Size(), imageScale, imageScale, cv::INTER_LINEAR);
         }
 
-        const double t_now = Now();
+        // Flip both axes = 180° rotation + mirror correction :contentReference[oaicite:5]{index=5}
+        cv::flip(frame, frame, -1);
+
+        double t_now = Now();
         SLAM.TrackMonocular(frame, t_now);
 
-        // Break if SLAM finished (viewer closed)
-        if (SLAM.isFinished())
-            break;
+        if (SLAM.isFinished()) break;
 
-        // Sleep so we do not outrun the desired FPS
-        std::chrono::steady_clock::time_point t_curr =
-            std::chrono::steady_clock::now();
-        double elapsed =
-            std::chrono::duration<double>(t_curr - t_prev).count();
+        // Throttle to ~30 Hz
+        auto t_curr = chrono::steady_clock::now();
+        double elapsed = chrono::duration<double>(t_curr - t_prev).count();
         if (elapsed < frame_period) {
-            std::this_thread::sleep_for(
-                std::chrono::duration<double>(frame_period - elapsed));
+            this_thread::sleep_for(chrono::duration<double>(frame_period - elapsed));
         }
-        t_prev = std::chrono::steady_clock::now();
+        t_prev = chrono::steady_clock::now();
 
-        // Allow ESC key to terminate
-        if (cv::waitKey(1) == 27)
-            break;
+        if (cv::waitKey(1) == 27) break;  // ESC to exit
     }
 
     // ---------------------------------------------------------------------
-    // 3. Clean shutdown & save trajectories --------------------------------
+    // 4. Shutdown & save trajectories -------------------------------------
     // ---------------------------------------------------------------------
-    cout << "\nShutting down SLAM …" << endl;
+    cout << "\nShutting down SLAM …\n";
     SLAM.Shutdown();
 
-    const string kf_file  = save_suffix ? "KeyFrameTrajectory_" + suffix + ".txt"
-                                        : "KeyFrameTrajectory.txt";
-    const string cam_file = save_suffix ? "CameraTrajectory_" + suffix + ".txt"
-                                        : "CameraTrajectory.txt";
-
+    string kf_file  = save_suffix ? "KeyFrameTrajectory_" + suffix + ".txt"
+                                  : "KeyFrameTrajectory.txt";
+    string cam_file = save_suffix ? "CameraTrajectory_" + suffix + ".txt"
+                                  : "CameraTrajectory.txt";
     SLAM.SaveKeyFrameTrajectoryEuRoC(kf_file);
     SLAM.SaveTrajectoryEuRoC(cam_file);
 

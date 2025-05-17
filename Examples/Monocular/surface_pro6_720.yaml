@@ -1,0 +1,19 @@
+  %YAML:1.0
+  # -------------------------------------------------
+  # Camera parameters (example 1920×1080 webcam)
+  Camera.type: "PinHole"
+  Camera.width: 1280
+  Camera.height: 720
+
+  Camera.fx: 982.797489995
+  Camera.fy: 988.037158273
+  Camera.cx: 645.841382765
+  Camera.cy: 357.000697383
+
+  Camera.k1: -0.01364597
+  Camera.k2: -0.03631907
+  Camera.p1: -0.00230919
+  Camera.p2:  0.0005465
+
+  Camera.fps: 30.0        # set to your real fps
+  ThDepth: 400.0
