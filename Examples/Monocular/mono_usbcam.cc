@@ -21,34 +21,46 @@
 
 using namespace std;
 
-namespace {
-volatile std::sig_atomic_t g_stop_requested = 0;
-void SigIntHandler(int) { g_stop_requested = 1; }
+namespace
+{
+    volatile std::sig_atomic_t g_stop_requested = 0;
+    void SigIntHandler(int) { g_stop_requested = 1; }
 
-// Return current time in seconds
-inline double Now() {
-    return std::chrono::duration<double>(
-               std::chrono::steady_clock::now().time_since_epoch())
-        .count();
-}
+    // Return current time in seconds
+    inline double Now()
+    {
+        return std::chrono::duration<double>(
+                std::chrono::steady_clock::now().time_since_epoch())
+            .count();
+    }
 } // namespace
 
-int main(int argc, char** argv) {
-    if (argc < 3 || argc > 4) {
+int main(int argc, char** argv)
+{
+    if (argc < 3 || argc > 4)
+    {
         cerr << "\nUsage: " << argv[0]
-             << " <path_to_vocabulary> <path_to_settings_yaml>\n";
+            << " <path_to_vocabulary> <path_to_settings_yaml>\n";
         return EXIT_FAILURE;
     }
 
-    const string vocab_file   = argv[1];
+    const string vocab_file = argv[1];
     const string settings_yml = argv[2];
+
+    cv::FileStorage fs(settings_yml, cv::FileStorage::READ);
+    if (!fs.isOpened())
+    {
+        std::cerr << "ERROR: Cannot open settings file: " << settings_yml << std::endl;
+        return -1;
+    }
 
     // ---------------------------------------------------------------------
     // 1. Open the Surface Pro 6 rear camera -------------------------------
     // ---------------------------------------------------------------------
     const string device = "/dev/video42";
-    cv::VideoCapture cap(device, cv::CAP_V4L2);  // use V4L2 backend :contentReference[oaicite:3]{index=3}
-    if (!cap.isOpened()) {
+    cv::VideoCapture cap(device, cv::CAP_V4L2); // use V4L2 backend :contentReference[oaicite:3]{index=3}
+    if (!cap.isOpened())
+    {
         cerr << "ERROR: Could not open rear camera at " << device << endl;
         return EXIT_FAILURE;
     }
@@ -58,12 +70,21 @@ int main(int argc, char** argv) {
     cap.set(cv::CAP_PROP_FRAME_HEIGHT, 720);
 
     cout << "Rear camera opened: "
-         << cap.get(cv::CAP_PROP_FRAME_WIDTH)  << "×"
-         << cap.get(cv::CAP_PROP_FRAME_HEIGHT) << endl;
+        << cap.get(cv::CAP_PROP_FRAME_WIDTH) << "×"
+        << cap.get(cv::CAP_PROP_FRAME_HEIGHT) << endl;
 
     // ---------------------------------------------------------------------
     // 2. Initialise ORB-SLAM3 ----------------------------------------------
     // ---------------------------------------------------------------------
+    try
+    {
+        ORB_SLAM3::System SLAM(vocab_file, settings_yml, ORB_SLAM3::System::MONOCULAR, true);
+    }
+    catch (const cv::Exception& e)
+    {
+        std::cerr << "OpenCV exception: " << e.what() << std::endl;
+        return -1;
+    }
     ORB_SLAM3::System SLAM(vocab_file, settings_yml, ORB_SLAM3::System::MONOCULAR, true);
     signal(SIGINT, SigIntHandler);
 
@@ -79,14 +100,17 @@ int main(int argc, char** argv) {
     // ---------------------------------------------------------------------
     // 3. Capture, correct orientation, and SLAM track ----------------------
     // ---------------------------------------------------------------------
-    while (!g_stop_requested) {
-        if (!cap.read(frame) || frame.empty()) {
+    while (!g_stop_requested)
+    {
+        if (!cap.read(frame) || frame.empty())
+        {
             cerr << "ERROR: Blank frame grabbed — aborting.\n";
             break;
         }
 
         // Resize if needed
-        if (imageScale != 1.0f) {
+        if (imageScale != 1.0f)
+        {
             cv::resize(frame, frame, cv::Size(), imageScale, imageScale, cv::INTER_LINEAR);
         }
 
@@ -101,12 +125,13 @@ int main(int argc, char** argv) {
         // Throttle to ~30 Hz
         auto t_curr = chrono::steady_clock::now();
         double elapsed = chrono::duration<double>(t_curr - t_prev).count();
-        if (elapsed < frame_period) {
+        if (elapsed < frame_period)
+        {
             this_thread::sleep_for(chrono::duration<double>(frame_period - elapsed));
         }
         t_prev = chrono::steady_clock::now();
 
-        if (cv::waitKey(1) == 27) break;  // ESC to exit
+        if (cv::waitKey(1) == 27) break; // ESC to exit
     }
 
     // ---------------------------------------------------------------------

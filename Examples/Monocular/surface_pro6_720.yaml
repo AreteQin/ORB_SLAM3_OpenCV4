@@ -1,4 +1,5 @@
   %YAML:1.0
+  File.version: "1.0"
   # -------------------------------------------------
   # Camera parameters (example 1920×1080 webcam)
   Camera.type: "PinHole"
