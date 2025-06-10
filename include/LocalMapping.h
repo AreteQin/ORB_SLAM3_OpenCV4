@@ -141,8 +141,8 @@ protected:
 
     System *mpSystem;
 
-    bool mbMonocular;
-    bool mbInertial;
+    bool mbMonocular; // true if is monocular or imu_monocular
+    bool mbInertial;  // true if is inertial
 
     void ResetIfRequested();
     bool mbResetRequested;
