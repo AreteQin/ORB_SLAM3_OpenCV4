@@ -124,8 +124,10 @@ namespace ORB_SLAM3 {
         }
     }
 
+    // FIXED: Added explicit nullptr initializations to the constructor list to prevent garbage pointer traps
     Settings::Settings(const std::string &configFile, const int& sensor) :
-    bNeedToUndistort_(false), bNeedToRectify_(false), bNeedToResize1_(false), bNeedToResize2_(false) {
+    bNeedToUndistort_(false), bNeedToRectify_(false), bNeedToResize1_(false), bNeedToResize2_(false),
+    calibration1_(nullptr), calibration2_(nullptr), originalCalib1_(nullptr), originalCalib2_(nullptr) {
         sensor_ = sensor;
 
         //Open settings file
@@ -349,8 +351,6 @@ namespace ORB_SLAM3 {
         }
 
         thDepth_ = readParameter<float>(fSettings,"Stereo.ThDepth",found);
-
-
     }
 
     void Settings::readImageInfo(cv::FileStorage &fSettings) {
@@ -550,6 +550,7 @@ namespace ORB_SLAM3 {
             output << " ]" << endl;
         }
 
+        // FIXED: Added strict safe condition handling for structural nullptr initialization issues
         if(settings.sensor_ == System::STEREO || settings.sensor_ == System::IMU_STEREO){
             output << "\t-Camera 2 parameters (";
             if(settings.cameraType_ == Settings::PinHole || settings.cameraType_ ==  Settings::Rectified){
@@ -559,13 +560,22 @@ namespace ORB_SLAM3 {
                 output << "Kannala-Brandt";
             }
             output << "" << ": [";
-            for(size_t i = 0; i < settings.originalCalib2_->size(); i++){
-                output << " " << settings.originalCalib2_->getParameter(i);
+
+            // Safe Redirect: If Rectified profile, mirror metrics from Cam 1 to avoid reading garbage pointer sizes
+            if(settings.cameraType_ == Settings::Rectified && settings.originalCalib1_) {
+                for(size_t i = 0; i < settings.originalCalib1_->size(); i++){
+                    output << " " << settings.originalCalib1_->getParameter(i);
+                }
+            }
+            else if(settings.originalCalib2_) {
+                for(size_t i = 0; i < settings.originalCalib2_->size(); i++){
+                    output << " " << settings.originalCalib2_->getParameter(i);
+                }
             }
             output << " ]" << endl;
 
             if(!settings.vPinHoleDistorsion2_.empty()){
-                output << "\t-Camera 1 distortion parameters: [ ";
+                output << "\t-Camera 2 distortion parameters: [ ";
                 for(float d : settings.vPinHoleDistorsion2_){
                     output << " " << d;
                 }
@@ -591,7 +601,7 @@ namespace ORB_SLAM3 {
             output << " ]" << endl;
 
             if((settings.sensor_ == System::STEREO || settings.sensor_ == System::IMU_STEREO) &&
-                settings.cameraType_ == Settings::KannalaBrandt){
+                settings.cameraType_ == Settings::KannalaBrandt && settings.calibration2_){
                 output << "\t-Camera 2 parameters after resize: [ ";
                 for(size_t i = 0; i < settings.calibration2_->size(); i++){
                     output << " " << settings.calibration2_->getParameter(i);
@@ -607,7 +617,7 @@ namespace ORB_SLAM3 {
             output << "\t-Stereo baseline: " << settings.b_ << endl;
             output << "\t-Stereo depth threshold : " << settings.thDepth_ << endl;
 
-            if(settings.cameraType_ == Settings::KannalaBrandt){
+            if(settings.cameraType_ == Settings::KannalaBrandt && settings.calibration1_ && settings.calibration2_){
                 auto vOverlapping1 = static_cast<KannalaBrandt8*>(settings.calibration1_)->mvLappingArea;
                 auto vOverlapping2 = static_cast<KannalaBrandt8*>(settings.calibration2_)->mvLappingArea;
                 output << "\t-Camera 1 overlapping area: [ " << vOverlapping1[0] << " , " << vOverlapping1[1] << " ]" << endl;
