@@ -8,6 +8,13 @@
 ## Run with your USB camera
 `./Examples/Monocular/mono_usbcam Vocabulary/ORBvoc.txt Examples/Monocular/surface_pro6.yaml 1 30`
 
+## Evaluation:
+python -m venv .venv
+source .venv/bin/activate
+python -m pip install --upgrade pip
+pip install -r evaluation_requirements.txt
+evo_res seq_*_results.zip
+
 # ORB-SLAM3
 
 ### V1.0, December 22th, 2021
