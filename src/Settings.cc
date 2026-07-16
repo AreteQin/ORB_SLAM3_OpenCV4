@@ -551,7 +551,7 @@ namespace ORB_SLAM3 {
         }
 
         // FIXED: Added strict safe condition handling for structural nullptr initialization issues
-        if(settings.sensor_ == System::STEREO || settings.sensor_ == System::IMU_STEREO){
+        if((settings.sensor_ == System::STEREO || settings.sensor_ == System::IMU_STEREO) && settings.originalCalib2_ != nullptr){
             output << "\t-Camera 2 parameters (";
             if(settings.cameraType_ == Settings::PinHole || settings.cameraType_ ==  Settings::Rectified){
                 output << "Pinhole";
