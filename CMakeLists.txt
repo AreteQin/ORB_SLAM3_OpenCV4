@@ -191,6 +191,10 @@ add_executable(stereo_kitti
         Examples/Stereo/stereo_kitti.cc)
 target_link_libraries(stereo_kitti ${PROJECT_NAME})
 
+add_executable(stereo_kitti_gui
+        Examples/Stereo/stereo_kitti_gui.cc)
+target_link_libraries(stereo_kitti_gui ${PROJECT_NAME})
+
 add_executable(stereo_euroc
         Examples/Stereo/stereo_euroc.cc)
 target_link_libraries(stereo_euroc ${PROJECT_NAME})
@@ -269,6 +273,10 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/Examples/Stereo-Inertia
 add_executable(stereo_inertial_euroc
         Examples/Stereo-Inertial/stereo_inertial_euroc.cc)
 target_link_libraries(stereo_inertial_euroc ${PROJECT_NAME})
+
+add_executable(stereo_inertial_euroc_gui
+        Examples/Stereo-Inertial/stereo_inertial_euroc_gui.cc)
+target_link_libraries(stereo_inertial_euroc_gui ${PROJECT_NAME})
 
 add_executable(stereo_inertial_tum_vi
         Examples/Stereo-Inertial/stereo_inertial_tum_vi.cc)
