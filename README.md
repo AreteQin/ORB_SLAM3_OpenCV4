@@ -8,10 +8,10 @@
 ## Docker
 `docker build -t orbslam3:opencv4 .`
 
-`docker load -i orbslam3_opencv4.tar.gz`
-
 ### for GUI on Windows
 `winget install marha.VcXsrv`
+
+Open XLaunch and check "Disable access control"
 
 `docker run -it --rm -e DISPLAY=host.docker.internal:0 -v "C:\Users\qinqi\Downloads\ORBSLAM3\00:/data/kitti" orbslam3:opencv4`
 
