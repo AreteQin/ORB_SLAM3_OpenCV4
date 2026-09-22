@@ -8,6 +8,8 @@
 ## Docker
 `docker build -t orbslam3:opencv4 .`
 
+`docker load -i orbslam3_opencv4.tar.gz`
+
 `docker run -it --rm -e DISPLAY=host.docker.internal:0 -v "C:\Users\qinqi\Downloads\ORBSLAM3\00:/data/kitti" orbslam3:opencv4`
 
 `./Examples/Stereo/stereo_kitti_gui Vocabulary/ORBvoc.txt Examples/Stereo/KITTI00-02.yaml /data/kitti`
