@@ -23,7 +23,7 @@ RUN if [ -n "$APT_MIRROR" ]; then \
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential cmake git pkg-config \
     libopencv-dev libeigen3-dev libboost-dev libboost-serialization-dev \
-    libssl-dev libgoogle-glog-dev libunwind-dev \
+    libssl-dev libgoogle-glog-dev libunwind-dev x11-apps \
     python3-pip libgl1-mesa-dev libglew-dev libepoxy-dev \
     libwayland-dev libxkbcommon-dev wayland-protocols \
     && rm -rf /var/lib/apt/lists/*
